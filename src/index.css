@@ -10,3 +10,12 @@ body {
 .lesson-item {
   border: 1px solid black;
 }
+
+.toast {
+  position: 'fixed';
+  top: '12px';
+  right: '12px';
+  padding: '8px 12px';
+  color: white;
+  zIndex: '1000';
+}

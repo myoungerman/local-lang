@@ -7,8 +7,7 @@
   <body>
     <div id="main-page">
       <h1>Lessons</h1>
-      <button id="test-btn">Load new window</button>
-      <p>You have no lessons! Enter a title and text, then click the button below to add a lesson.</p>
+      <p>To add a lesson, enter a title and text, then click the button below.</p>
       <input id="lesson-title" placeholder="Enter lesson title..."></input>
       <input id="lesson-body" placeholder="Paste the article text here..."></input>
       <br>
@@ -16,10 +15,10 @@
       <div id="lesson-list"></div>
     </div>
 
-    <div id="test-page" hidden>
+    <div id="lesson-page" hidden>
       <button id="back-btn">Back</button>
-      <h1>Test Page</h1>
-      <p>sample</p>
+      <h1 id="lesson-title-field">Lesson title</h1>
+      <p id="lesson-body-field">Lesson body</p>
     </div>
   </body>
   <script type="module" src="./src/renderer.js"></script>

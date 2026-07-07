@@ -48,6 +48,10 @@ class AppDatabase{
     const stmt = this.db.prepare('SELECT * FROM lessons');
     return stmt.all();
   }
+  getLessonById(lesson_id){
+    const stmt = this.db.prepare('SELECT * FROM lessons WHERE lesson_id = ?');
+    return stmt.get(lesson_id);
+  }
   close(){
     this.db.close();
     console.log('Database closed');

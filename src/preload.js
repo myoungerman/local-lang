@@ -7,7 +7,8 @@ const api = {
   addLesson: (title, body_text) => ipcRenderer.invoke('add-lesson', title, body_text),
   deleteLesson: (lesson_id) => ipcRenderer.invoke('delete-lesson', lesson_id),
   updateLesson: (lesson_id, title, body_text) => ipcRenderer.invoke('update-lesson', lesson_id, title, body_text),
-  getAllLessons: () => ipcRenderer.invoke('get-all-lessons')
+  getAllLessons: () => ipcRenderer.invoke('get-all-lessons'),
+  getLessonById: (lesson_id) => ipcRenderer.invoke('get-lesson-by-id', lesson_id),
 }
 
 contextBridge.exposeInMainWorld('api', api);

@@ -16,4 +16,7 @@ export default function setUpHandlers(db) {
     ipcMain.handle('get-all-lessons', () => {
         return db.getAllLessons();
     });
+    ipcMain.handle('get-lesson-by-id', (event, lesson_id) => {
+        return db.getLessonById(lesson_id);
+    });
 }

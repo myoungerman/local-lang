@@ -1,24 +1,18 @@
 import './index.css';
 
-const lessonBody = document.getElementById('lesson-body');
+const lessonBody = document.getElementById('lesson-body-field');
 const addLessonButton = document.getElementById('add-lesson-btn');
 const lessonList = document.getElementById('lesson-list');
-const lessonTitle = document.getElementById('lesson-title');
-const testButton = document.getElementById('test-btn');
+const lessonTitle = document.getElementById('lesson-title-field');
 const mainPage = document.getElementById('main-page');
-const testPage = document.getElementById('test-page');
+const lessonPage = document.getElementById('lesson-page');
 const backButton = document.getElementById('back-btn');
 
 const showToast = (message, isError = false) => {
   const toast = document.createElement('div');
   toast.textContent = message;
-  toast.style.position = 'fixed';
-  toast.style.top = '12px';
-  toast.style.right = '12px';
-  toast.style.padding = '8px 12px';
+  toast.classList.add('toast');
   toast.style.background = isError ? '#b91c1c' : '#2563eb';
-  toast.style.color = 'white';
-  toast.style.zIndex = '1000';
   document.body.appendChild(toast);
 
   setTimeout(() => {
@@ -42,22 +36,29 @@ const handleAddLesson = async () => {
 
 addLessonButton.addEventListener('click', handleAddLesson);
 
-testButton.addEventListener('click', () => {
-  mainPage.hidden = true;
-  testPage.hidden = false;
-});
-
 backButton.addEventListener('click', () => {
-  testPage.hidden = true;
+  lessonPage.hidden = true;
   mainPage.hidden = false;
 });
 
 const renderLessons = async () => {
+  console.log('Rendering lessons...');
   const lessons = await window.api.getAllLessons();
   lessonList.innerHTML = lessons.map(lesson => `<div id="${lesson.lesson_id}" class="lesson-item"><h3>${lesson.title}</h3></div>`).join('');
 };
 
 renderLessons();
+
+const getLessonContent = async (lessonId) => {
+  const lessonContent = await window.api.getLessonById(lessonId);
+
+  if (lessonContent) {
+    lessonTitle.textContent = lessonContent.title;
+    lessonBody.textContent = lessonContent.body_text;
+  } else {
+    showToast('Lesson not found.', true);
+  }
+};
 
 lessonList.addEventListener('click', (event) => {
   const lessonItem = event.target.closest('.lesson-item');
@@ -69,5 +70,15 @@ lessonList.addEventListener('click', (event) => {
   const lessonId = lessonItem.id;
   if (lessonId) {
     showToast(`Selected lesson ${lessonId}`);
+    mainPage.hidden = true;
+    lessonPage.hidden = false;
+    getLessonContent(lessonId);
   }
+
+  /*
+  In the database, look up the given lesson ID and then display its title and body text in the "lesson-title" and "lesson-body" elements.
+  To do this, I need a new method in the database, the preload, and the ipcHandlers.
+  */
+
+
 });
