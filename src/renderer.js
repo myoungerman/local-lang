@@ -4,6 +4,10 @@ const lessonBody = document.getElementById('lesson-body');
 const addLessonButton = document.getElementById('add-lesson-btn');
 const lessonList = document.getElementById('lesson-list');
 const lessonTitle = document.getElementById('lesson-title');
+const testButton = document.getElementById('test-btn');
+const mainPage = document.getElementById('main-page');
+const testPage = document.getElementById('test-page');
+const backButton = document.getElementById('back-btn');
 
 const showToast = (message, isError = false) => {
   const toast = document.createElement('div');
@@ -38,9 +42,32 @@ const handleAddLesson = async () => {
 
 addLessonButton.addEventListener('click', handleAddLesson);
 
+testButton.addEventListener('click', () => {
+  mainPage.hidden = true;
+  testPage.hidden = false;
+});
+
+backButton.addEventListener('click', () => {
+  testPage.hidden = true;
+  mainPage.hidden = false;
+});
+
 const renderLessons = async () => {
   const lessons = await window.api.getAllLessons();
-  lessonList.innerHTML = lessons.map(lesson => `<div><h3>${lesson.title}</h3></div>`).join('');
+  lessonList.innerHTML = lessons.map(lesson => `<div id="${lesson.lesson_id}" class="lesson-item"><h3>${lesson.title}</h3></div>`).join('');
 };
 
 renderLessons();
+
+lessonList.addEventListener('click', (event) => {
+  const lessonItem = event.target.closest('.lesson-item');
+
+  if (!lessonItem) {
+    return;
+  }
+
+  const lessonId = lessonItem.id;
+  if (lessonId) {
+    showToast(`Selected lesson ${lessonId}`);
+  }
+});
