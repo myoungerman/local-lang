@@ -7,19 +7,41 @@
   <body>
     <div id="main-page">
       <h1>Lessons</h1>
-      <button id="test-btn">Load new window</button>
-      <p>You have no lessons! Enter a title and text, then click the button below to add a lesson.</p>
-      <input id="lesson-title" placeholder="Enter lesson title..."></input>
-      <input id="lesson-body" placeholder="Paste the article text here..."></input>
+      <p>To add a lesson, enter a title and text, then click the button below.</p>
+      <input id="lesson-title-input" placeholder="Enter lesson title..."></input>
+      <input id="lesson-body-input" placeholder="Paste the article text here..."></input>
       <br>
       <button id="add-lesson-btn">Add lesson</button>
       <div id="lesson-list"></div>
     </div>
 
-    <div id="test-page" hidden>
+    <div id="lesson-page" hidden>
       <button id="back-btn">Back</button>
-      <h1>Test Page</h1>
-      <p>sample</p>
+      <h1 id="lesson-title-display">Lesson title</h1>
+      <p id="lesson-body-display">Lesson body</p>
+    </div>
+
+    <div id="word-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="word-modal-title">
+      <div class="modal-content">
+        <button id="word-modal-close" class="modal-close" aria-label="Close word details">×</button>
+        <h2 id="word-modal-title">Word details</h2>
+        <div id="word-modal-definition" class="word-field"></div>
+        <div class="word-field">
+          <label for="word-modal-familiarity">Familiarity</label>
+          <select id="word-modal-familiarity">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div class="word-field">
+          <label for="word-modal-notes">Notes</label>
+          <textarea id="word-modal-notes" rows="5" placeholder="Add notes for this word..."></textarea>
+        </div>
+        <button id="word-modal-save">Save</button>
+      </div>
     </div>
   </body>
   <script type="module" src="./src/renderer.js"></script>

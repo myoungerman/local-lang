@@ -1,24 +1,27 @@
 import './index.css';
 
-const lessonBody = document.getElementById('lesson-body');
+const lessonBodyInput = document.getElementById('lesson-body-input');
 const addLessonButton = document.getElementById('add-lesson-btn');
 const lessonList = document.getElementById('lesson-list');
-const lessonTitle = document.getElementById('lesson-title');
-const testButton = document.getElementById('test-btn');
+const lessonTitleInput = document.getElementById('lesson-title-input');
+const lessonTitleDisplay = document.getElementById('lesson-title-display');
+const lessonBodyDisplay = document.getElementById('lesson-body-display');
 const mainPage = document.getElementById('main-page');
-const testPage = document.getElementById('test-page');
+const lessonPage = document.getElementById('lesson-page');
 const backButton = document.getElementById('back-btn');
+const wordModal = document.getElementById('word-modal');
+const wordModalCloseButton = document.getElementById('word-modal-close');
+const wordModalTitle = document.getElementById('word-modal-title');
+const wordModalDefinition = document.getElementById('word-modal-definition');
+const wordModalFamiliarity = document.getElementById('word-modal-familiarity');
+const wordModalNotes = document.getElementById('word-modal-notes');
+const wordModalSaveButton = document.getElementById('word-modal-save');
 
 const showToast = (message, isError = false) => {
   const toast = document.createElement('div');
   toast.textContent = message;
-  toast.style.position = 'fixed';
-  toast.style.top = '12px';
-  toast.style.right = '12px';
-  toast.style.padding = '8px 12px';
+  toast.classList.add('toast');
   toast.style.background = isError ? '#b91c1c' : '#2563eb';
-  toast.style.color = 'white';
-  toast.style.zIndex = '1000';
   document.body.appendChild(toast);
 
   setTimeout(() => {
@@ -27,12 +30,12 @@ const showToast = (message, isError = false) => {
 };
 
 const handleAddLesson = async () => {
-  const title = lessonTitle.value.trim();
-  const lesson = lessonBody.value.trim();
+  const title = lessonTitleInput.value.trim();
+  const lesson = lessonBodyInput.value.trim();
   if (title && lesson) {
     await window.api.addLesson(title, lesson);
-    lessonTitle.value = '';
-    lessonBody.value = '';
+    lessonTitleInput.value = '';
+    lessonBodyInput.value = '';
     showToast('Lesson added successfully.');
     renderLessons();
   } else {
@@ -42,22 +45,119 @@ const handleAddLesson = async () => {
 
 addLessonButton.addEventListener('click', handleAddLesson);
 
-testButton.addEventListener('click', () => {
-  mainPage.hidden = true;
-  testPage.hidden = false;
-});
-
 backButton.addEventListener('click', () => {
-  testPage.hidden = true;
+  lessonPage.hidden = true;
   mainPage.hidden = false;
+  renderLessons();
 });
 
 const renderLessons = async () => {
+  console.log('Rendering lessons...');
   const lessons = await window.api.getAllLessons();
-  lessonList.innerHTML = lessons.map(lesson => `<div id="${lesson.lesson_id}" class="lesson-item"><h3>${lesson.title}</h3></div>`).join('');
+  const sortedLessons = [...lessons].sort((a, b) => {
+    const aTime = new Date(a.last_opened || 0).getTime();
+    const bTime = new Date(b.last_opened || 0).getTime();
+    return bTime - aTime;
+  });
+
+  lessonList.innerHTML = sortedLessons.map(lesson => `<div id="${lesson.lesson_id}" class="lesson-item"><h3>${lesson.title}</h3></div>`).join('');
 };
 
 renderLessons();
+
+const escapeHtml = (text) => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+const renderLessonBody = (text) => {
+  const parts = text.split(/([A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+)/g);
+  return parts
+    .map((part) => {
+      if (/^[A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+$/.test(part)) {
+        const normalized = part.toLowerCase();
+        return `<span class="word-token" data-word="${escapeHtml(normalized)}">${escapeHtml(part)}</span>`;
+      }
+      return escapeHtml(part);
+    })
+    .join('');
+};
+
+const getLessonContent = async (lessonId) => {
+  const lessonContent = await window.api.getLessonById(lessonId);
+
+  if (lessonContent) {
+    lessonTitleDisplay.textContent = lessonContent.title;
+    lessonBodyDisplay.innerHTML = renderLessonBody(lessonContent.body_text);
+  } else {
+    showToast('Lesson not found.', true);
+  }
+};
+
+const openWordModal = async (word) => {
+  const [translation, progress] = await Promise.all([
+    window.api.getTranslationForWord(word),
+    window.api.getWordProgress(word),
+  ]);
+
+  wordModalTitle.textContent = word;
+
+  if (translation) {
+    wordModalDefinition.innerHTML = `
+      <div><strong>Definition:</strong> ${escapeHtml(translation.trans_list || '')}</div>
+      <div><strong>Score:</strong> ${escapeHtml(String(translation.max_score ?? ''))}</div>
+      <div><strong>Importance:</strong> ${escapeHtml(String(translation.rel_importance ?? ''))}</div>
+    `;
+  } else {
+    wordModalDefinition.innerHTML = `<div>No dictionary entry found for this word.</div>`;
+  }
+
+  wordModalFamiliarity.value = progress?.familiarity ?? 1;
+  wordModalNotes.value = progress?.notes ?? '';
+  wordModal.dataset.currentWord = word;
+  wordModal.classList.remove('hidden');
+};
+
+const closeWordModal = () => {
+  wordModal.classList.add('hidden');
+  wordModal.dataset.currentWord = '';
+};
+
+const saveWordProgress = async () => {
+  const word = wordModal.dataset.currentWord;
+  if (!word) return;
+
+  const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
+  const notes = wordModalNotes.value.trim();
+  await window.api.saveWordProgress(word, familiarity, notes);
+  showToast('Word details saved.');
+  closeWordModal();
+};
+
+wordModalCloseButton.addEventListener('click', closeWordModal);
+wordModal.addEventListener('click', (event) => {
+  if (event.target === wordModal) {
+    closeWordModal();
+  }
+});
+wordModalSaveButton.addEventListener('click', saveWordProgress);
+
+lessonBodyDisplay.addEventListener('click', (event) => {
+  const wordToken = event.target.closest('.word-token');
+  if (!wordToken) return;
+  const word = wordToken.dataset.word;
+  if (word) {
+    openWordModal(word);
+  }
+});
+
+const updateLessonContent = async (lessonId, updates) => {
+  await window.api.updateLesson(lessonId, updates);
+};
 
 lessonList.addEventListener('click', (event) => {
   const lessonItem = event.target.closest('.lesson-item');
@@ -69,5 +169,11 @@ lessonList.addEventListener('click', (event) => {
   const lessonId = lessonItem.id;
   if (lessonId) {
     showToast(`Selected lesson ${lessonId}`);
+    mainPage.hidden = true;
+    lessonPage.hidden = false;
+    const clickedAt = new Date().toISOString();
+    updateLessonContent(lessonId, { last_opened: clickedAt });
+    getLessonContent(lessonId);
   }
+
 });

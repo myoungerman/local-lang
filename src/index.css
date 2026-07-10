@@ -9,4 +9,81 @@ body {
 
 .lesson-item {
   border: 1px solid black;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  cursor: pointer;
+}
+
+.word-token {
+  cursor: pointer;
+  color: #1d4ed8;
+}
+
+.word-token:hover {
+  text-decoration: underline;
+}
+
+.toast {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  padding: 8px 12px;
+  color: white;
+  z-index: 1000;
+  border-radius: 4px;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
+  max-width: 560px;
+  width: 100%;
+  padding: 1.5rem;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  float: right;
+  cursor: pointer;
+}
+
+.word-field {
+  margin-top: 1rem;
+}
+
+.word-field label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+.word-field textarea,
+.word-field select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+}
+
+#word-modal-definition {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
