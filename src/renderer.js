@@ -9,6 +9,13 @@ const lessonBodyDisplay = document.getElementById('lesson-body-display');
 const mainPage = document.getElementById('main-page');
 const lessonPage = document.getElementById('lesson-page');
 const backButton = document.getElementById('back-btn');
+const wordModal = document.getElementById('word-modal');
+const wordModalCloseButton = document.getElementById('word-modal-close');
+const wordModalTitle = document.getElementById('word-modal-title');
+const wordModalDefinition = document.getElementById('word-modal-definition');
+const wordModalFamiliarity = document.getElementById('word-modal-familiarity');
+const wordModalNotes = document.getElementById('word-modal-notes');
+const wordModalSaveButton = document.getElementById('word-modal-save');
 
 const showToast = (message, isError = false) => {
   const toast = document.createElement('div');
@@ -58,16 +65,95 @@ const renderLessons = async () => {
 
 renderLessons();
 
+const escapeHtml = (text) => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+const renderLessonBody = (text) => {
+  const parts = text.split(/([A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+)/g);
+  return parts
+    .map((part) => {
+      if (/^[A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+$/.test(part)) {
+        const normalized = part.toLowerCase();
+        return `<span class="word-token" data-word="${escapeHtml(normalized)}">${escapeHtml(part)}</span>`;
+      }
+      return escapeHtml(part);
+    })
+    .join('');
+};
+
 const getLessonContent = async (lessonId) => {
   const lessonContent = await window.api.getLessonById(lessonId);
 
   if (lessonContent) {
     lessonTitleDisplay.textContent = lessonContent.title;
-    lessonBodyDisplay.textContent = lessonContent.body_text;
+    lessonBodyDisplay.innerHTML = renderLessonBody(lessonContent.body_text);
   } else {
     showToast('Lesson not found.', true);
   }
 };
+
+const openWordModal = async (word) => {
+  const [translation, progress] = await Promise.all([
+    window.api.getTranslationForWord(word),
+    window.api.getWordProgress(word),
+  ]);
+
+  wordModalTitle.textContent = word;
+
+  if (translation) {
+    wordModalDefinition.innerHTML = `
+      <div><strong>Definition:</strong> ${escapeHtml(translation.trans_list || '')}</div>
+      <div><strong>Score:</strong> ${escapeHtml(String(translation.max_score ?? ''))}</div>
+      <div><strong>Importance:</strong> ${escapeHtml(String(translation.rel_importance ?? ''))}</div>
+    `;
+  } else {
+    wordModalDefinition.innerHTML = `<div>No dictionary entry found for this word.</div>`;
+  }
+
+  wordModalFamiliarity.value = progress?.familiarity ?? 1;
+  wordModalNotes.value = progress?.notes ?? '';
+  wordModal.dataset.currentWord = word;
+  wordModal.classList.remove('hidden');
+};
+
+const closeWordModal = () => {
+  wordModal.classList.add('hidden');
+  wordModal.dataset.currentWord = '';
+};
+
+const saveWordProgress = async () => {
+  const word = wordModal.dataset.currentWord;
+  if (!word) return;
+
+  const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
+  const notes = wordModalNotes.value.trim();
+  await window.api.saveWordProgress(word, familiarity, notes);
+  showToast('Word details saved.');
+  closeWordModal();
+};
+
+wordModalCloseButton.addEventListener('click', closeWordModal);
+wordModal.addEventListener('click', (event) => {
+  if (event.target === wordModal) {
+    closeWordModal();
+  }
+});
+wordModalSaveButton.addEventListener('click', saveWordProgress);
+
+lessonBodyDisplay.addEventListener('click', (event) => {
+  const wordToken = event.target.closest('.word-token');
+  if (!wordToken) return;
+  const word = wordToken.dataset.word;
+  if (word) {
+    openWordModal(word);
+  }
+});
 
 const updateLessonContent = async (lessonId, updates) => {
   await window.api.updateLesson(lessonId, updates);

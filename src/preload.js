@@ -9,6 +9,9 @@ const api = {
   updateLesson: (lesson_id, updates) => ipcRenderer.invoke('update-lesson', lesson_id, updates),
   getAllLessons: () => ipcRenderer.invoke('get-all-lessons'),
   getLessonById: (lesson_id) => ipcRenderer.invoke('get-lesson-by-id', lesson_id),
+  getTranslationForWord: (word) => ipcRenderer.invoke('get-translation-for-word', word),
+  getWordProgress: (word) => ipcRenderer.invoke('get-word-progress', word),
+  saveWordProgress: (word, familiarity, notes) => ipcRenderer.invoke('save-word-progress', word, familiarity, notes),
 }
 
 contextBridge.exposeInMainWorld('api', api);

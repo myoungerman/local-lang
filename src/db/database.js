@@ -1,13 +1,17 @@
 import { app } from 'electron';
 import Database from 'better-sqlite3';
+import fs from 'node:fs';
 import path from 'node:path';
-
 
 class AppDatabase{
   constructor(){
-    const dbPath = path.join(app.getPath('userData'), 'langlocal.sqlite');
-    this.db = new Database(dbPath);
+    const userDbPath = path.join(app.getAppPath(), 'src', 'db', 'langlocal.sqlite');
+
+    this.db = new Database(userDbPath);
     this.db.pragma('journal_mode = WAL');
+
+    const translationDbPath = path.join(app.getAppPath(), 'src', 'db', 'fr-en.sqlite3');
+    this.translationDb = new Database(translationDbPath, { readonly: true });
     this.setUpDataBase();
   }
 
@@ -21,6 +25,15 @@ class AppDatabase{
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_opened TIMESTAMP,
         percent_completed INTEGER DEFAULT 0
+      )
+    `);
+
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS word_progress (
+        word TEXT PRIMARY KEY,
+        familiarity INTEGER DEFAULT 1,
+        notes TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
   }
@@ -62,12 +75,40 @@ class AppDatabase{
     const stmt = this.db.prepare('SELECT * FROM lessons');
     return stmt.all();
   }
+
   getLessonById(lesson_id){
     const stmt = this.db.prepare('SELECT * FROM lessons WHERE lesson_id = ?');
     return stmt.get(lesson_id);
   }
+
+  getTranslationByFrenchWord(frenchWord){
+    const stmt = this.translationDb.prepare(
+      'SELECT written_rep, trans_list, max_score, rel_importance FROM simple_translation WHERE written_rep = ? COLLATE NOCASE LIMIT 1'
+    );
+    return stmt.get(frenchWord);
+  }
+
+  getWordProgress(word){
+    const stmt = this.db.prepare('SELECT word, familiarity, notes FROM word_progress WHERE word = ?');
+    return stmt.get(word);
+  }
+
+  saveWordProgress(word, familiarity, notes){
+    const stmt = this.db.prepare(`
+      INSERT INTO word_progress (word, familiarity, notes, updated_at)
+      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(word) DO UPDATE SET
+        familiarity = excluded.familiarity,
+        notes = excluded.notes,
+        updated_at = CURRENT_TIMESTAMP
+    `);
+    stmt.run(word, familiarity, notes);
+    return { word, familiarity, notes };
+  }
+
   close(){
     this.db.close();
+    this.translationDb.close();
     console.log('Database closed');
   }
 }

@@ -19,4 +19,13 @@ export default function setUpHandlers(db) {
     ipcMain.handle('get-lesson-by-id', (event, lesson_id) => {
         return db.getLessonById(lesson_id);
     });
+    ipcMain.handle('get-translation-for-word', (event, word) => {
+        return db.getTranslationByFrenchWord(word);
+    });
+    ipcMain.handle('get-word-progress', (event, word) => {
+        return db.getWordProgress(word);
+    });
+    ipcMain.handle('save-word-progress', (event, word, familiarity, notes) => {
+        return db.saveWordProgress(word, familiarity, notes);
+    });
 }
