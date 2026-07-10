@@ -1,9 +1,11 @@
 import './index.css';
 
-const lessonBody = document.getElementById('lesson-body-field');
+const lessonBodyInput = document.getElementById('lesson-body-input');
 const addLessonButton = document.getElementById('add-lesson-btn');
 const lessonList = document.getElementById('lesson-list');
-const lessonTitle = document.getElementById('lesson-title-field');
+const lessonTitleInput = document.getElementById('lesson-title-input');
+const lessonTitleDisplay = document.getElementById('lesson-title-display');
+const lessonBodyDisplay = document.getElementById('lesson-body-display');
 const mainPage = document.getElementById('main-page');
 const lessonPage = document.getElementById('lesson-page');
 const backButton = document.getElementById('back-btn');
@@ -21,12 +23,12 @@ const showToast = (message, isError = false) => {
 };
 
 const handleAddLesson = async () => {
-  const title = lessonTitle.value.trim();
-  const lesson = lessonBody.value.trim();
+  const title = lessonTitleInput.value.trim();
+  const lesson = lessonBodyInput.value.trim();
   if (title && lesson) {
     await window.api.addLesson(title, lesson);
-    lessonTitle.value = '';
-    lessonBody.value = '';
+    lessonTitleInput.value = '';
+    lessonBodyInput.value = '';
     showToast('Lesson added successfully.');
     renderLessons();
   } else {
@@ -39,12 +41,19 @@ addLessonButton.addEventListener('click', handleAddLesson);
 backButton.addEventListener('click', () => {
   lessonPage.hidden = true;
   mainPage.hidden = false;
+  renderLessons();
 });
 
 const renderLessons = async () => {
   console.log('Rendering lessons...');
   const lessons = await window.api.getAllLessons();
-  lessonList.innerHTML = lessons.map(lesson => `<div id="${lesson.lesson_id}" class="lesson-item"><h3>${lesson.title}</h3></div>`).join('');
+  const sortedLessons = [...lessons].sort((a, b) => {
+    const aTime = new Date(a.last_opened || 0).getTime();
+    const bTime = new Date(b.last_opened || 0).getTime();
+    return bTime - aTime;
+  });
+
+  lessonList.innerHTML = sortedLessons.map(lesson => `<div id="${lesson.lesson_id}" class="lesson-item"><h3>${lesson.title}</h3></div>`).join('');
 };
 
 renderLessons();
@@ -53,11 +62,15 @@ const getLessonContent = async (lessonId) => {
   const lessonContent = await window.api.getLessonById(lessonId);
 
   if (lessonContent) {
-    lessonTitle.textContent = lessonContent.title;
-    lessonBody.textContent = lessonContent.body_text;
+    lessonTitleDisplay.textContent = lessonContent.title;
+    lessonBodyDisplay.textContent = lessonContent.body_text;
   } else {
     showToast('Lesson not found.', true);
   }
+};
+
+const updateLessonContent = async (lessonId, updates) => {
+  await window.api.updateLesson(lessonId, updates);
 };
 
 lessonList.addEventListener('click', (event) => {
@@ -72,13 +85,9 @@ lessonList.addEventListener('click', (event) => {
     showToast(`Selected lesson ${lessonId}`);
     mainPage.hidden = true;
     lessonPage.hidden = false;
+    const clickedAt = new Date().toISOString();
+    updateLessonContent(lessonId, { last_opened: clickedAt });
     getLessonContent(lessonId);
   }
-
-  /*
-  In the database, look up the given lesson ID and then display its title and body text in the "lesson-title" and "lesson-body" elements.
-  To do this, I need a new method in the database, the preload, and the ipcHandlers.
-  */
-
 
 });

@@ -40,10 +40,24 @@ class AppDatabase{
     const info = stmt.run(lesson_id);
     return info.changes > 0;
   }
-  updateLesson(lesson_id, title, body_text){
-    const stmt = this.db.prepare('UPDATE lessons SET title = ?, body_text = ? WHERE lesson_id = ?');
-    stmt.run(title, body_text, lesson_id);
+
+  updateLesson(lesson_id, updates){
+    const allowedColumns = ['title', 'body_text', 'language_target', 'last_opened', 'percent_completed'];
+    const entries = Object.entries(updates || {}).filter(([column]) => allowedColumns.includes(column));
+
+    if (entries.length === 0) {
+      return false;
+    }
+
+    const setClause = entries.map(([column]) => `${column} = ?`).join(', ');
+    const values = entries.map(([, value]) => value);
+    values.push(lesson_id);
+
+    const stmt = this.db.prepare(`UPDATE lessons SET ${setClause} WHERE lesson_id = ?`);
+    const info = stmt.run(...values);
+    return info.changes > 0;
   }
+
   getAllLessons(){
     const stmt = this.db.prepare('SELECT * FROM lessons');
     return stmt.all();

@@ -9,8 +9,8 @@ export default function setUpHandlers(db) {
         return db.deleteLesson(lesson_id);
     });
 
-    ipcMain.handle('update-lesson', (event, lesson_id, title, body_text) => {
-        return db.updateLesson(lesson_id, title, body_text);
+    ipcMain.handle('update-lesson', (event, lesson_id, updates) => {
+        return db.updateLesson(lesson_id, updates);
     });
 
     ipcMain.handle('get-all-lessons', () => {
