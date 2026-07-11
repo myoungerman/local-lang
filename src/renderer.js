@@ -17,6 +17,8 @@ const wordModalFamiliarity = document.getElementById('word-modal-familiarity');
 const wordModalNotes = document.getElementById('word-modal-notes');
 const wordModalSaveButton = document.getElementById('word-modal-save');
 
+let currentLessonId = null;
+
 const showToast = (message, isError = false) => {
   const toast = document.createElement('div');
   toast.textContent = message;
@@ -52,7 +54,6 @@ backButton.addEventListener('click', () => {
 });
 
 const renderLessons = async () => {
-  console.log('Rendering lessons...');
   const lessons = await window.api.getAllLessons();
   const sortedLessons = [...lessons].sort((a, b) => {
     const aTime = new Date(a.last_opened || 0).getTime();
@@ -74,13 +75,33 @@ const escapeHtml = (text) => {
     .replace(/'/g, '&#39;');
 };
 
-const renderLessonBody = (text) => {
+const getFamiliarityClass = (familiarity) => {
+  const value = Number(familiarity);
+  if (value === 1) return 'familiarity-1';
+  if (value === 2) return 'familiarity-2';
+  if (value === 3) return 'familiarity-3';
+  if (value === 4) return 'familiarity-4';
+  return '';
+};
+
+const renderLessonBody = async (text) => {
   const parts = text.split(/([A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+)/g);
+  const progressCache = new Map();
+  const wordTokens = parts.filter((part) => /^[A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+$/.test(part));
+  const uniqueWords = [...new Set(wordTokens.map((word) => word.toLowerCase()))];
+
+  for (const word of uniqueWords) {
+    const progress = await window.api.getWordProgress(word);
+    progressCache.set(word, progress?.familiarity ?? 0);
+  }
+
   return parts
     .map((part) => {
       if (/^[A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+$/.test(part)) {
         const normalized = part.toLowerCase();
-        return `<span class="word-token" data-word="${escapeHtml(normalized)}">${escapeHtml(part)}</span>`;
+        const familiarityClass = getFamiliarityClass(progressCache.get(normalized));
+        const className = ['word-token', familiarityClass].filter(Boolean).join(' ');
+        return `<span class="${className}" data-word="${escapeHtml(normalized)}">${escapeHtml(part)}</span>`;
       }
       return escapeHtml(part);
     })
@@ -92,7 +113,7 @@ const getLessonContent = async (lessonId) => {
 
   if (lessonContent) {
     lessonTitleDisplay.textContent = lessonContent.title;
-    lessonBodyDisplay.innerHTML = renderLessonBody(lessonContent.body_text);
+    lessonBodyDisplay.innerHTML = await renderLessonBody(lessonContent.body_text);
   } else {
     showToast('Lesson not found.', true);
   }
@@ -109,8 +130,6 @@ const openWordModal = async (word) => {
   if (translation) {
     wordModalDefinition.innerHTML = `
       <div><strong>Definition:</strong> ${escapeHtml(translation.trans_list || '')}</div>
-      <div><strong>Score:</strong> ${escapeHtml(String(translation.max_score ?? ''))}</div>
-      <div><strong>Importance:</strong> ${escapeHtml(String(translation.rel_importance ?? ''))}</div>
     `;
   } else {
     wordModalDefinition.innerHTML = `<div>No dictionary entry found for this word.</div>`;
@@ -136,6 +155,10 @@ const saveWordProgress = async () => {
   await window.api.saveWordProgress(word, familiarity, notes);
   showToast('Word details saved.');
   closeWordModal();
+
+  if (currentLessonId) {
+    await getLessonContent(currentLessonId);
+  }
 };
 
 wordModalCloseButton.addEventListener('click', closeWordModal);
@@ -169,11 +192,24 @@ lessonList.addEventListener('click', (event) => {
   const lessonId = lessonItem.id;
   if (lessonId) {
     showToast(`Selected lesson ${lessonId}`);
+    currentLessonId = lessonId;
     mainPage.hidden = true;
     lessonPage.hidden = false;
     const clickedAt = new Date().toISOString();
     updateLessonContent(lessonId, { last_opened: clickedAt });
     getLessonContent(lessonId);
   }
+});
 
+lessonBodyDisplay.addEventListener('mouseup', (event) => {
+  const startNode = document.getSelection().anchorNode;
+  const endNode = document.getSelection().focusNode;
+  const range = document.createRange();
+
+  range.setStart(startNode, 0);
+  range.setEndAfter(endNode);
+
+  console.log(`Start node: ${startNode.nodeValue}`);
+  console.log(`End node: ${endNode.nodeValue}`);
+  console.log(`Range text: ${range.toString()}`)
 });
