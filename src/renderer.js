@@ -84,16 +84,29 @@ const getFamiliarityClass = (familiarity) => {
   return '';
 };
 
+/*
+Currenly, renderLessonBody takes the raw text and parses each word individually without referencing the database to see if there are compound words that need
+to be highlighted. This would also apply to sentence translations later on.
+
+We need any compound words in the user's DB to be retroactively highlighted in the body text.
+In renderLessonBody, I'll check if the compound words (aka words with a space between them) in the user's word_progress table match the words in the body text.
+Any matches will get the same class highlighting that's already implemented for individual words.
+*/
+
 const renderLessonBody = async (text) => {
   const parts = text.split(/([A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+)/g);
   const progressCache = new Map();
   const wordTokens = parts.filter((part) => /^[A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+$/.test(part));
   const uniqueWords = [...new Set(wordTokens.map((word) => word.toLowerCase()))];
 
+  // Take the words (which have been validated as words and converted to lowercase), check their progress, and make a map.
   for (const word of uniqueWords) {
     const progress = await window.api.getWordProgress(word);
     progressCache.set(word, progress?.familiarity ?? 0);
   }
+
+  //Check for compound words
+
 
   return parts
     .map((part) => {
@@ -152,7 +165,9 @@ const saveWordProgress = async () => {
 
   const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
   const notes = wordModalNotes.value.trim();
-  await window.api.saveWordProgress(word, familiarity, notes);
+  const isCompound = word.includes(' ') ? 1 : 0;
+  console.log(`Saving progress for word: ${word}, isCompound: ${isCompound}`);
+  await window.api.saveWordProgress(word, familiarity, notes, isCompound);
   showToast('Word details saved.');
   closeWordModal();
 
@@ -208,8 +223,6 @@ lessonBodyDisplay.addEventListener('mouseup', (event) => {
 
   range.setStart(startNode, 0);
   range.setEndAfter(endNode);
-
-  console.log(`Start node: ${startNode.nodeValue}`);
-  console.log(`End node: ${endNode.nodeValue}`);
-  console.log(`Range text: ${range.toString()}`)
+  const rangeText = range.toString();
+  openWordModal(rangeText);
 });
