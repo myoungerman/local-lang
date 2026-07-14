@@ -33,7 +33,8 @@ class AppDatabase{
         word TEXT PRIMARY KEY,
         familiarity INTEGER DEFAULT 1,
         notes TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_compound BOOLEAN DEFAULT FALSE
       )
     `);
   }
@@ -81,6 +82,11 @@ class AppDatabase{
     return stmt.get(lesson_id);
   }
 
+  getCompoundWords(){
+    const stmt = this.db.prepare('SELECT * FROM word_progress WHERE is_compound = 1');
+    return stmt.all();
+  }
+
   getTranslationByFrenchWord(frenchWord){
     const stmt = this.translationDb.prepare(
       'SELECT written_rep, trans_list, max_score, rel_importance FROM simple_translation WHERE written_rep = ? COLLATE NOCASE LIMIT 1'
@@ -93,17 +99,18 @@ class AppDatabase{
     return stmt.get(word);
   }
 
-  saveWordProgress(word, familiarity, notes){
+  saveWordProgress(word, familiarity, notes, is_compound){
     const stmt = this.db.prepare(`
-      INSERT INTO word_progress (word, familiarity, notes, updated_at)
-      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+      INSERT INTO word_progress (word, familiarity, notes, updated_at, is_compound)
+      VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)
       ON CONFLICT(word) DO UPDATE SET
         familiarity = excluded.familiarity,
         notes = excluded.notes,
-        updated_at = CURRENT_TIMESTAMP
+        updated_at = CURRENT_TIMESTAMP,
+        is_compound = excluded.is_compound
     `);
-    stmt.run(word, familiarity, notes);
-    return { word, familiarity, notes };
+    stmt.run(word, familiarity, notes, is_compound);
+    return { word, familiarity, notes, is_compound };
   }
 
   close(){

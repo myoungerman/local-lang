@@ -17,6 +17,8 @@ const wordModalFamiliarity = document.getElementById('word-modal-familiarity');
 const wordModalNotes = document.getElementById('word-modal-notes');
 const wordModalSaveButton = document.getElementById('word-modal-save');
 
+let currentLessonId = null;
+
 const showToast = (message, isError = false) => {
   const toast = document.createElement('div');
   toast.textContent = message;
@@ -52,7 +54,6 @@ backButton.addEventListener('click', () => {
 });
 
 const renderLessons = async () => {
-  console.log('Rendering lessons...');
   const lessons = await window.api.getAllLessons();
   const sortedLessons = [...lessons].sort((a, b) => {
     const aTime = new Date(a.last_opened || 0).getTime();
@@ -74,17 +75,102 @@ const escapeHtml = (text) => {
     .replace(/'/g, '&#39;');
 };
 
-const renderLessonBody = (text) => {
+const getFamiliarityClass = (familiarity) => {
+  const value = Number(familiarity);
+  if (value === 1) return 'familiarity-1';
+  if (value === 2) return 'familiarity-2';
+  if (value === 3) return 'familiarity-3';
+  if (value === 4) return 'familiarity-4';
+  return '';
+};
+
+const renderLessonBody = async (text) => {
   const parts = text.split(/([A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+)/g);
-  return parts
-    .map((part) => {
-      if (/^[A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+$/.test(part)) {
-        const normalized = part.toLowerCase();
-        return `<span class="word-token" data-word="${escapeHtml(normalized)}">${escapeHtml(part)}</span>`;
-      }
-      return escapeHtml(part);
+  const progressCache = new Map();
+  const wordTokens = parts.filter((part) => /^[A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+$/.test(part));
+  const uniqueWords = [...new Set(wordTokens.map((word) => word.toLowerCase()))];
+
+  // Take the words (which have been validated as words and converted to lowercase), check their progress, and make a map.
+  for (const word of uniqueWords) {
+    const progress = await window.api.getWordProgress(word);
+    progressCache.set(word, progress?.familiarity ?? 0);
+  }
+
+  // Get list of compound words
+  const compoundWords = await window.api.getCompoundWords();
+  const compoundWordsInText = compoundWords.filter((el) => text.includes(el.word.toLowerCase()));
+
+  // Parse individual words into strings of styled HTML spans
+  const individualWordsHtml = parts.map((part) => {
+    if (/^[A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+$/.test(part)) {
+      const normalized = part.toLowerCase();
+      const familiarityClass = getFamiliarityClass(progressCache.get(normalized));
+      const className = ['word-token', familiarityClass].filter(Boolean).join(' ');
+      return `<span class="${className}" data-word="${escapeHtml(normalized)}">${escapeHtml(part)}</span>`;
+    }
+    return escapeHtml(part);
     })
-    .join('');
+    //.join('');
+
+  const spanRegex = new RegExp(`<span[^>]*data-word="([^"]*)"[^>]*>`); // Looks for a <span> tag and captures the value of its data-word attribute
+
+  // Iterate over the compound words found in the text
+  for (let i = 0; i < compoundWordsInText.length; i++) {
+    const compoundWord = compoundWordsInText[i];
+    const compoundParts = compoundWord.word.split(' '); // Ex. "je m'appelle" becomes "je" and "m'appelle"
+    let partToMatch = 0; // 0 , 1
+    let indicesOfCompoundWords = [];
+
+    // Iterate over the individual words
+    for (let j = 0; j < individualWordsHtml.length; j++) { 
+      const individualWord = individualWordsHtml[j]; // ex. `<span class=".level_1" data-word="bonjour">Bonjour</span>`;
+      // Check its data-word attribute to see if it matches the nth part of the compound word we're searching for.
+      // Ex. Does the individual word "Je" match the substring "Je" of the compound word "Je m'appelle"?
+      const match = spanRegex.exec(individualWord);
+      // The data-word attribute is already escaped when it was inserted into the HTML, so
+      // re-escaping it here would turn entities like &#39; into &amp;#39;.
+      const matchWordValue = match ? match[1] : null;
+      const escapedPartToMatch = escapeHtml(compoundParts[partToMatch]);
+
+      if (matchWordValue !== null) {
+        console.log(`matchWordValue: ${matchWordValue}`);
+        console.log(`compoundParts[partToMatch]: ${escapedPartToMatch}`);
+      }
+      // Runs when there's a match with part of the compound word we're searching for.
+      if (matchWordValue == escapedPartToMatch) { 
+        indicesOfCompoundWords.push(j);
+        // If there are no more substrings to match, then we've found the entire compound word at index j of the individualWordsHtml array.
+        if (partToMatch === compoundParts.length - 1) {
+          // Get the familiarity level for the compound word
+          const wordInDb = await window.api.getWordProgress(compoundWord.word);
+          const familiarityClass = getFamiliarityClass(wordInDb.familiarity);
+          // Wrap the first and last indices in a compound word span
+          const firstSpanOfCompoundWord = individualWordsHtml[indicesOfCompoundWords[0]];
+          individualWordsHtml[indicesOfCompoundWords[0]] = `<span class="compound-word word-token ${familiarityClass}" data-word="${escapeHtml(compoundWord.word)}">${firstSpanOfCompoundWord}`;
+          individualWordsHtml[indicesOfCompoundWords[indicesOfCompoundWords.length - 1]] += `</span>`;
+
+          // Reset the part of the word that we're looking for and empty the indices array
+          partToMatch = 0;
+          indicesOfCompoundWords = [];
+
+          // If we've searched the entire array of individual words, then there are no more possible instances of the current compound word, so continue to the next compound word.
+          if (j == individualWordsHtml.length - 1) {
+            break;
+          }
+        }
+        partToMatch++;
+      } else {
+        if (matchWordValue !== null) {
+          // Empty the indices array and reset the part counter
+          indicesOfCompoundWords = [];
+          partToMatch = 0;
+        }
+      }
+    }
+  }
+
+  return individualWordsHtml.join('');
+  //return individualWordsHtml;
 };
 
 const getLessonContent = async (lessonId) => {
@@ -92,7 +178,7 @@ const getLessonContent = async (lessonId) => {
 
   if (lessonContent) {
     lessonTitleDisplay.textContent = lessonContent.title;
-    lessonBodyDisplay.innerHTML = renderLessonBody(lessonContent.body_text);
+    lessonBodyDisplay.innerHTML = await renderLessonBody(lessonContent.body_text);
   } else {
     showToast('Lesson not found.', true);
   }
@@ -109,8 +195,6 @@ const openWordModal = async (word) => {
   if (translation) {
     wordModalDefinition.innerHTML = `
       <div><strong>Definition:</strong> ${escapeHtml(translation.trans_list || '')}</div>
-      <div><strong>Score:</strong> ${escapeHtml(String(translation.max_score ?? ''))}</div>
-      <div><strong>Importance:</strong> ${escapeHtml(String(translation.rel_importance ?? ''))}</div>
     `;
   } else {
     wordModalDefinition.innerHTML = `<div>No dictionary entry found for this word.</div>`;
@@ -133,9 +217,15 @@ const saveWordProgress = async () => {
 
   const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
   const notes = wordModalNotes.value.trim();
-  await window.api.saveWordProgress(word, familiarity, notes);
+  const isCompound = word.includes(' ') ? 1 : 0;
+  console.log(`Saving progress for word: ${word}, isCompound: ${isCompound}`);
+  await window.api.saveWordProgress(word, familiarity, notes, isCompound);
   showToast('Word details saved.');
   closeWordModal();
+
+  if (currentLessonId) {
+    await getLessonContent(currentLessonId);
+  }
 };
 
 wordModalCloseButton.addEventListener('click', closeWordModal);
@@ -169,11 +259,23 @@ lessonList.addEventListener('click', (event) => {
   const lessonId = lessonItem.id;
   if (lessonId) {
     showToast(`Selected lesson ${lessonId}`);
+    currentLessonId = lessonId;
     mainPage.hidden = true;
     lessonPage.hidden = false;
     const clickedAt = new Date().toISOString();
     updateLessonContent(lessonId, { last_opened: clickedAt });
     getLessonContent(lessonId);
   }
+});
 
+// Lets you select compound words by highlighting them
+lessonBodyDisplay.addEventListener('mouseup', (event) => {
+  const startNode = document.getSelection().anchorNode;
+  const endNode = document.getSelection().focusNode;
+  const range = document.createRange();
+
+  range.setStart(startNode, 0);
+  range.setEndAfter(endNode);
+  const rangeText = range.toString();
+  openWordModal(rangeText);
 });

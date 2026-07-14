@@ -19,6 +19,31 @@ body {
   color: #1d4ed8;
 }
 
+.compound-word {
+  display: inline-block;
+  margin: 0 0.15rem;
+}
+
+.word-token.familiarity-1 {
+  color: #facc15;
+  font-weight: 600;
+}
+
+.word-token.familiarity-2 {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.word-token.familiarity-3 {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.word-token.familiarity-4 {
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
 .word-token:hover {
   text-decoration: underline;
 }
