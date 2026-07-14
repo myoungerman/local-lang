@@ -12,6 +12,7 @@ const api = {
   getTranslationForWord: (word) => ipcRenderer.invoke('get-translation-for-word', word),
   getWordProgress: (word) => ipcRenderer.invoke('get-word-progress', word),
   saveWordProgress: (word, familiarity, notes, is_compound) => ipcRenderer.invoke('save-word-progress', word, familiarity, notes, is_compound),
+  getCompoundWords: () => ipcRenderer.invoke('get-compound-words')
 }   
 
 contextBridge.exposeInMainWorld('api', api);

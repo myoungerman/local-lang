@@ -84,15 +84,6 @@ const getFamiliarityClass = (familiarity) => {
   return '';
 };
 
-/*
-Currenly, renderLessonBody takes the raw text and parses each word individually without referencing the database to see if there are compound words that need
-to be highlighted. This would also apply to sentence translations later on.
-
-We need any compound words in the user's DB to be retroactively highlighted in the body text.
-In renderLessonBody, I'll check if the compound words (aka words with a space between them) in the user's word_progress table match the words in the body text.
-Any matches will get the same class highlighting that's already implemented for individual words.
-*/
-
 const renderLessonBody = async (text) => {
   const parts = text.split(/([A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+)/g);
   const progressCache = new Map();
@@ -105,20 +96,71 @@ const renderLessonBody = async (text) => {
     progressCache.set(word, progress?.familiarity ?? 0);
   }
 
-  //Check for compound words
+  // Get list of compound words
+  const compoundWords = await window.api.getCompoundWords();
+  const compoundWordsInText = compoundWords.filter((el) => text.includes(el.word.toLowerCase()));
 
-
-  return parts
-    .map((part) => {
-      if (/^[A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+$/.test(part)) {
-        const normalized = part.toLowerCase();
-        const familiarityClass = getFamiliarityClass(progressCache.get(normalized));
-        const className = ['word-token', familiarityClass].filter(Boolean).join(' ');
-        return `<span class="${className}" data-word="${escapeHtml(normalized)}">${escapeHtml(part)}</span>`;
-      }
-      return escapeHtml(part);
+  // Parse individual words into strings of styled HTML spans
+  const individualWordsHtml = parts.map((part) => {
+    if (/^[A-Za-zÀ-ÖØ-öø-ÿœŒ’'-]+$/.test(part)) {
+      const normalized = part.toLowerCase();
+      const familiarityClass = getFamiliarityClass(progressCache.get(normalized));
+      const className = ['word-token', familiarityClass].filter(Boolean).join(' ');
+      return `<span class="${className}" data-word="${escapeHtml(normalized)}">${escapeHtml(part)}</span>`;
+    }
+    return escapeHtml(part);
     })
-    .join('');
+    //.join('');
+
+  const spanRegex = new RegExp(`<span[^>]*data-word="([^"]*)"[^>]*>`); // Looks for a <span> tag and captures the value of its data-word attribute
+
+  // Iterate over the compound words found in the text
+  for (let i = 0; i < compoundWordsInText.length; i++) {
+    const compoundWord = compoundWordsInText[i];
+    const compoundParts = compoundWord.word.split(' '); // Ex. "je m'appelle" becomes "je" and "m'appelle"
+    let partToMatch = 0; // 0 , 1
+    let indicesOfCompoundWords = [];
+
+    // Iterate over the individual words
+    for (let j = 0; j < individualWordsHtml.length; j++) { 
+      const individualWord = individualWordsHtml[j]; // ex. `<span class=".level_1" data-word="bonjour">Bonjour</span>`;
+      // Check its data-word attribute to see if it matches the nth part of the compound word we're searching for.
+      // Ex. Does the individual word "Je" match the substring "Je" of the compound word "Je m'appelle"?
+      const match = spanRegex.exec(individualWord);
+      const matchWordValue = match ? match[1] : null;
+
+      //if (matchWordValue !== null) {
+    console.log(`Comparing ${matchWordValue} with ${compoundParts[partToMatch]}, partToMatch: ${partToMatch}`);
+      //}
+
+      if (matchWordValue == compoundParts[partToMatch]) { 
+        console.log(`Found match for substring ${compoundParts[partToMatch]} at index ${j}, word: ${matchWordValue}`);
+        indicesOfCompoundWords.push(j);
+        // If there are no more parts to match, we've found the entire compound word at index j of the individualWordsHtml array.
+        if (partToMatch === compoundParts.length - 1) {
+          // Get the familiarity level for the compound word
+          const wordInDb = await window.api.getWordProgress(compoundWord.word);
+          const familiarityClass = getFamiliarityClass(wordInDb.familiarity);
+          // Wrap the first and last indices in a compound word span
+          const firstSpanOfCompoundWord = individualWordsHtml[indicesOfCompoundWords[0]];
+          individualWordsHtml[indicesOfCompoundWords[0]] = `<span class="compound-word word-token ${familiarityClass}" data-word="${escapeHtml(compoundWord.word)}">${firstSpanOfCompoundWord}`;
+          individualWordsHtml[indicesOfCompoundWords[indicesOfCompoundWords.length - 1]] += `</span>`;
+          break;
+        }
+        partToMatch++; // 0 -> 1 -> 2 etc
+
+      } else {
+        if (matchWordValue !== null) {
+          // Empty the indices array and reset the part counter
+          indicesOfCompoundWords = [];
+          partToMatch = 0;
+        }
+      }
+    }
+  }
+
+  return individualWordsHtml.join('');
+  //return individualWordsHtml;
 };
 
 const getLessonContent = async (lessonId) => {
@@ -216,6 +258,7 @@ lessonList.addEventListener('click', (event) => {
   }
 });
 
+// Lets you select compound words by highlighting them
 lessonBodyDisplay.addEventListener('mouseup', (event) => {
   const startNode = document.getSelection().anchorNode;
   const endNode = document.getSelection().focusNode;

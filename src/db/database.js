@@ -82,6 +82,11 @@ class AppDatabase{
     return stmt.get(lesson_id);
   }
 
+  getCompoundWords(){
+    const stmt = this.db.prepare('SELECT * FROM word_progress WHERE is_compound = 1');
+    return stmt.all();
+  }
+
   getTranslationByFrenchWord(frenchWord){
     const stmt = this.translationDb.prepare(
       'SELECT written_rep, trans_list, max_score, rel_importance FROM simple_translation WHERE written_rep = ? COLLATE NOCASE LIMIT 1'

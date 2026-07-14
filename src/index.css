@@ -19,6 +19,11 @@ body {
   color: #1d4ed8;
 }
 
+.compound-word {
+  display: inline-block;
+  margin: 0 0.15rem;
+}
+
 .word-token.familiarity-1 {
   color: #facc15;
   font-weight: 600;
