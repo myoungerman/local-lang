@@ -127,16 +127,19 @@ const renderLessonBody = async (text) => {
       // Check its data-word attribute to see if it matches the nth part of the compound word we're searching for.
       // Ex. Does the individual word "Je" match the substring "Je" of the compound word "Je m'appelle"?
       const match = spanRegex.exec(individualWord);
+      // The data-word attribute is already escaped when it was inserted into the HTML, so
+      // re-escaping it here would turn entities like &#39; into &amp;#39;.
       const matchWordValue = match ? match[1] : null;
+      const escapedPartToMatch = escapeHtml(compoundParts[partToMatch]);
 
-      //if (matchWordValue !== null) {
-    console.log(`Comparing ${matchWordValue} with ${compoundParts[partToMatch]}, partToMatch: ${partToMatch}`);
-      //}
-
-      if (matchWordValue == compoundParts[partToMatch]) { 
-        console.log(`Found match for substring ${compoundParts[partToMatch]} at index ${j}, word: ${matchWordValue}`);
+      if (matchWordValue !== null) {
+        console.log(`matchWordValue: ${matchWordValue}`);
+        console.log(`compoundParts[partToMatch]: ${escapedPartToMatch}`);
+      }
+      // Runs when there's a match with part of the compound word we're searching for.
+      if (matchWordValue == escapedPartToMatch) { 
         indicesOfCompoundWords.push(j);
-        // If there are no more parts to match, we've found the entire compound word at index j of the individualWordsHtml array.
+        // If there are no more substrings to match, then we've found the entire compound word at index j of the individualWordsHtml array.
         if (partToMatch === compoundParts.length - 1) {
           // Get the familiarity level for the compound word
           const wordInDb = await window.api.getWordProgress(compoundWord.word);
@@ -145,10 +148,17 @@ const renderLessonBody = async (text) => {
           const firstSpanOfCompoundWord = individualWordsHtml[indicesOfCompoundWords[0]];
           individualWordsHtml[indicesOfCompoundWords[0]] = `<span class="compound-word word-token ${familiarityClass}" data-word="${escapeHtml(compoundWord.word)}">${firstSpanOfCompoundWord}`;
           individualWordsHtml[indicesOfCompoundWords[indicesOfCompoundWords.length - 1]] += `</span>`;
-          break;
-        }
-        partToMatch++; // 0 -> 1 -> 2 etc
 
+          // Reset the part of the word that we're looking for and empty the indices array
+          partToMatch = 0;
+          indicesOfCompoundWords = [];
+
+          // If we've searched the entire array of individual words, then there are no more possible instances of the current compound word, so continue to the next compound word.
+          if (j == individualWordsHtml.length - 1) {
+            break;
+          }
+        }
+        partToMatch++;
       } else {
         if (matchWordValue !== null) {
           // Empty the indices array and reset the part counter
