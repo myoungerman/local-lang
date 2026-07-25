@@ -1,4 +1,10 @@
 import './index.css';
+import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers";
+import fs from 'node:fs';
+import path from 'node:path';
+import { readdir } from 'node:fs/promises';
+
+env.allowLocalModels = false;
 
 const lessonBodyInput = document.getElementById('lesson-body-input');
 const addLessonButton = document.getElementById('add-lesson-btn');
@@ -16,9 +22,30 @@ const wordModalDefinition = document.getElementById('word-modal-definition');
 const wordModalFamiliarity = document.getElementById('word-modal-familiarity');
 const wordModalNotes = document.getElementById('word-modal-notes');
 const wordModalSaveButton = document.getElementById('word-modal-save');
+const downloadTranslationModelButton = document.getElementById('download-translation-model-btn');
+const status = document.getElementById('status');
 
 let currentLessonId = null;
 
+status.textContent = 'Status: Starting download.';
+
+// if the translation directory is empty, download the translation model
+const translationModelPath = path.join(app.getAppPath(), 'src', 'models', 'translation');
+const translationModelExists = readdir(translationModelPath);
+if (!translationModelExists) {
+  console.log("Model doesn't exist. Downloading...");
+  //downloadTranslationModel();
+}
+
+const downloadTranslationModel = async () => {
+  try {
+    const translationPipeline = await pipeline('translation', 'Helsinki-NLP/opus-mt-en-fr');
+    status.textContent = 'Status: Translation model downloaded.';
+  } catch (error) {
+    console.error('Error downloading translation model:', error);
+    status.textContent = 'Status: Error downloading translation model.';
+  }
+};
 const showToast = (message, isError = false) => {
   const toast = document.createElement('div');
   toast.textContent = message;
@@ -132,10 +159,6 @@ const renderLessonBody = async (text) => {
       const matchWordValue = match ? match[1] : null;
       const escapedPartToMatch = escapeHtml(compoundParts[partToMatch]);
 
-      if (matchWordValue !== null) {
-        console.log(`matchWordValue: ${matchWordValue}`);
-        console.log(`compoundParts[partToMatch]: ${escapedPartToMatch}`);
-      }
       // Runs when there's a match with part of the compound word we're searching for.
       if (matchWordValue == escapedPartToMatch) { 
         indicesOfCompoundWords.push(j);
@@ -218,7 +241,6 @@ const saveWordProgress = async () => {
   const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
   const notes = wordModalNotes.value.trim();
   const isCompound = word.includes(' ') ? 1 : 0;
-  console.log(`Saving progress for word: ${word}, isCompound: ${isCompound}`);
   await window.api.saveWordProgress(word, familiarity, notes, isCompound);
   showToast('Word details saved.');
   closeWordModal();
