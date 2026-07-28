@@ -1,10 +1,5 @@
 import './index.css';
-import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers";
-import fs from 'node:fs';
 import path from 'node:path';
-import { readdir } from 'node:fs/promises';
-
-env.allowLocalModels = false;
 
 const lessonBodyInput = document.getElementById('lesson-body-input');
 const addLessonButton = document.getElementById('add-lesson-btn');
@@ -29,23 +24,6 @@ let currentLessonId = null;
 
 status.textContent = 'Status: Starting download.';
 
-// if the translation directory is empty, download the translation model
-const translationModelPath = path.join(app.getAppPath(), 'src', 'models', 'translation');
-const translationModelExists = readdir(translationModelPath);
-if (!translationModelExists) {
-  console.log("Model doesn't exist. Downloading...");
-  //downloadTranslationModel();
-}
-
-const downloadTranslationModel = async () => {
-  try {
-    const translationPipeline = await pipeline('translation', 'Helsinki-NLP/opus-mt-en-fr');
-    status.textContent = 'Status: Translation model downloaded.';
-  } catch (error) {
-    console.error('Error downloading translation model:', error);
-    status.textContent = 'Status: Error downloading translation model.';
-  }
-};
 const showToast = (message, isError = false) => {
   const toast = document.createElement('div');
   toast.textContent = message;
