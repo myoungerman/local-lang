@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import started from 'electron-squirrel-startup';
@@ -8,6 +8,10 @@ import { listFiles, downloadFileToCacheDir } from "@huggingface/hub";
 import { pipeline, env } from "@xenova/transformers";
 
 let db;
+env.allowRemoteModels = false;
+env.cacheDir = path.join(app.getPath('userData'), 'cache');
+const translationModelPath = path.join(env.cacheDir, 'models--Xenova--opus-mt-fr-en');
+
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -42,12 +46,11 @@ app.whenReady().then(() => {
   db = new AppDatabase();
   db.setUpDataBase();
   setUpHandlers(db);
+  ipcMain.handle('translate-text', translate);
+  ipcMain.handle('download-translation-model', downloadTranslationModel);
   createWindow();
-
-  // Check if the translation model has been downloaded, and if not, download it.
-  const translationModelPath = path.join(app.getAppPath(), '/src/models/translation');
-  if (fs.existsSync(translationModelPath) && fs.readdirSync(translationModelPath).length === 0) {
-    downloadTranslationModel();
+  if (!fs.existsSync(env.cacheDir)) {
+    fs.mkdirSync(env.cacheDir, { recursive: true });
   }
 
   // On OS X it's common to re-create a window in the app when the
@@ -72,32 +75,37 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
-/*
-Get the list of filtered files by using the listFiles method,
-filtering out the files the user shouldn't download, and sending that list to downloadFileToCacheDir.
-That process will download the ONXX version of the model.
-Once the model is downloaded, update the path so we can call the model.
-*/
-
 const downloadTranslationModel = async () => {
   try {
+    if (fs.existsSync(translationModelPath)) {
+      return;
+    }
+    console.log('Downloading translation model...');
     let files = [];
     for await (const file of listFiles({
       repo: 'Xenova/opus-mt-fr-en',
       revision: 'main',
       recursive: true,
   })) {
-      // Add just the encoder_model_quantized.onnx and decoder_model_merged_quantized.onnx files from the ONNX folder.
+      const fileHasExtension = path.extname(file.path) !== '';
+      // Add just the encoder_model_quantized.onnx and decoder_model_merged_quantized.onnx files from the ONNX folder, and add the ONNX folder itself.
       if (file.path.includes('onnx') && (file.path.includes('encoder_model_quantized.onnx') || file.path.includes('decoder_model_merged_quantized.onnx'))) {
-        files.push(file);
+        const normalizedPath = file.path.replace(/\\/g, '/');
+        files.push({ ...file, path: normalizedPath });
+        console.log(`Added file ${file.path} to download list`);
       }
       // Add the files that are not in the ONNX folder.
-      if (!file.path.includes('onnx')) {
+      if (!file.path.includes('onnx') && fileHasExtension) {
         files.push(file);
       }
     }
 
-    await downloadFiles(files);
+    let saveLocation = await downloadFiles(files);
+    // When HuggingFace downloads a repo, it creates two folders called snapshots and blobs. It uses those folders to auto-update the model as new versions are available, but that structure prevents pipeline() from locating the files.
+    // To fix that, we delete the blobs folder, which contains symlinks that are irrelevant for an offline app, and move the model's files up a level from the snapshots folder.
+    saveLocation.then((location) => {
+      flattenDirectory(location);
+    });
   }
   catch (error) {
     console.error('listFiles failed:', error);
@@ -105,15 +113,57 @@ const downloadTranslationModel = async () => {
 };
 
 const downloadFiles = async (files) => {
-
-  const saveLocation = path.join(app.getAppPath(), '/src/models/translation');
   for (const el of files) {
-
     const savedFile = await downloadFileToCacheDir({
       repo: 'Xenova/opus-mt-fr-en',
       revision: 'main',
       path: el.path,
-      cacheDir: path.join(app.getAppPath(), '/src/models/translation'),
+      cacheDir: env.cacheDir,
     });
+    console.log(`Downloaded ${el.path} to ${env.cacheDir}`);
+  }
+  // Return the directory to be flattened.
+  return translationModelPath; 
+};
+
+const flattenDirectory = async (dir) => {
+  const blobsDir = path.join(dir, 'blobs');
+  const snapshotsDir = path.join(dir, 'snapshots');
+  // Delete the blobs folder.
+  if (fs.existsSync(blobsDir)) {
+    fs.rm(blobsDir, { recursive: true, force: true });
+  }
+  // Move the contents of the snapshots folder up to the model directory.
+  if (fs.existsSync(snapshotsDir)) {
+    const subFolders = await fs.readdirAsync(dir);
+    subFolders.forEach(subFolder => {
+        // Move the subfolder's contents up to the model directory.
+        const subFolderPath = path.join(snapshotsDir, subFolder);
+        const files = await fs.readdirAsync(subFolderPath);
+        const currentFilePaths = files.map(file => path.join(subFolderPath, file));
+        for (const oldFilePath of currentFilePaths) {
+          const newFilePath = path.join(translationModelPath, path.basename(file));
+          rename(oldFilePath, newFilePath);
+        }
+      });
+  }
+
+}
+
+const detector = async (text) => {
+  const result = await pipeline("translation", translationModelPath, {
+    cache_dir: path.join(env.cacheDir),
+    local_files_only: true,
+  });
+  return result(text);
+};
+
+const translate = async (text) => {
+  try {
+    const result = await detector(text);
+    console.log(`The word "${text}" translates to "${result}"`);
+  } catch (error) {
+    console.error('Translation failed:', error);
   }
 };
+

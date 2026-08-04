@@ -19,6 +19,7 @@ const wordModalNotes = document.getElementById('word-modal-notes');
 const wordModalSaveButton = document.getElementById('word-modal-save');
 const downloadTranslationModelButton = document.getElementById('download-translation-model-btn');
 const status = document.getElementById('status');
+const translateBtn = document.getElementById('translate-btn');
 
 let currentLessonId = null;
 
@@ -278,4 +279,24 @@ lessonBodyDisplay.addEventListener('mouseup', (event) => {
   range.setEndAfter(endNode);
   const rangeText = range.toString();
   openWordModal(rangeText);
+});
+
+translateBtn.addEventListener('click', async () => {
+  const wordToTranslate = document.getElementById('word-to-translate').value.trim();
+  if (wordToTranslate) {
+    try {
+      const translation = await window.api.translateText(wordToTranslate);
+      showToast(`Translation: ${translation}`);
+    } catch (error) {
+      showToast('Translation failed. Check console for details.', true);
+    }
+  }
+});
+
+downloadTranslationModelButton.addEventListener('click', async () => {
+  try {
+    const result = await window.api.downloadTranslationModel();
+    showToast('Translation model downloaded successfully.');
+  } catch (error) {
+    showToast('Translation model download failed. Check console for details.', true);}
 });
