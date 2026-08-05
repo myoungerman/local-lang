@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import { promises as fsp } from 'fs';
 import started from 'electron-squirrel-startup';
 import AppDatabase from './db/database';
 import setUpHandlers from './db/ipcHandlers'; 
@@ -50,6 +51,7 @@ app.whenReady().then(() => {
   ipcMain.handle('download-translation-model', downloadTranslationModel);
   createWindow();
   if (!fs.existsSync(env.cacheDir)) {
+    console.log(`Cache not found, creating directory.`);
     fs.mkdirSync(env.cacheDir, { recursive: true });
   }
 
@@ -101,11 +103,9 @@ const downloadTranslationModel = async () => {
     }
 
     let saveLocation = await downloadFiles(files);
-    // When HuggingFace downloads a repo, it creates two folders called snapshots and blobs. It uses those folders to auto-update the model as new versions are available, but that structure prevents pipeline() from locating the files.
+    // When HuggingFace downloads a repo, it creates two folders called snapshots and blobs. It uses those folders to auto-update the model as new versions become available, but that structure prevents pipeline() from locating the files.
     // To fix that, we delete the blobs folder, which contains symlinks that are irrelevant for an offline app, and move the model's files up a level from the snapshots folder.
-    saveLocation.then((location) => {
-      flattenDirectory(location);
-    });
+    await flattenDirectory(saveLocation);
   }
   catch (error) {
     console.error('listFiles failed:', error);
@@ -131,23 +131,36 @@ const flattenDirectory = async (dir) => {
   const snapshotsDir = path.join(dir, 'snapshots');
   // Delete the blobs folder.
   if (fs.existsSync(blobsDir)) {
-    fs.rm(blobsDir, { recursive: true, force: true });
+    await fsp.rm(blobsDir, { recursive: true, force: true });
   }
   // Move the contents of the snapshots folder up to the model directory.
   if (fs.existsSync(snapshotsDir)) {
-    const subFolders = await fs.readdirAsync(dir);
-    subFolders.forEach(subFolder => {
-        // Move the subfolder's contents up to the model directory.
-        const subFolderPath = path.join(snapshotsDir, subFolder);
-        const files = await fs.readdirAsync(subFolderPath);
-        const currentFilePaths = files.map(file => path.join(subFolderPath, file));
-        for (const oldFilePath of currentFilePaths) {
-          const newFilePath = path.join(translationModelPath, path.basename(file));
-          rename(oldFilePath, newFilePath);
+    const subFolders = await fsp.readdir(snapshotsDir);
+    for (const subFolder of subFolders) {
+      // Move the subfolder's contents up to the model directory. The subfolder name is a hash like 8f725e8.
+      const subFolderPath = path.join(snapshotsDir, subFolder);
+      const files = await fsp.readdir(subFolderPath);
+      // Ex. ...\snapshots\8f725e8\onnx\encoder_model_quantized.onnx
+      const currentFilePaths = files.map(file => path.join(subFolderPath, file));
+      for (const oldFilePath of currentFilePaths) {
+        // Ex. oldFilePath = ...\snapshots\8f725e8\onnx\encoder_model_quantized.onnx -> newFilePath = ...\models--Xenova--opus-mt-fr-en\encoder_model_quantized.onnx
+        const newFilePath = path.join(translationModelPath, path.basename(oldFilePath));
+        // if the destination directory already has a folder (NOT a file) with the same name, get the children of this item and move them into that folder that has the name of this folder
+        if (fs.existsSync(newFilePath) && fs.lstatSync(newFilePath).isDirectory()) {
+          const children = await fsp.readdir(oldFilePath);
+          for (const child of children) {
+            const oldChildPath = path.join(oldFilePath, child);
+            const newChildPath = path.join(newFilePath, child);
+            await fsp.rename(oldChildPath, newChildPath);
+            console.log(`Moved ${oldChildPath} to ${newChildPath}`);
+          }
+        } else {
+          await fsp.rename(oldFilePath, newFilePath);
+          console.log(`Moved ${oldFilePath} to ${newFilePath}`);
         }
-      });
+      }
+    }
   }
-
 }
 
 const detector = async (text) => {
