@@ -164,19 +164,22 @@ const flattenDirectory = async (dir) => {
 }
 
 const detector = async (text) => {
-  const result = await pipeline("translation", translationModelPath, {
+  const result = await pipeline("translation", "models--Xenova--opus-mt-fr-en", {
     cache_dir: path.join(env.cacheDir),
     local_files_only: true,
   });
   return result(text);
 };
 
-const translate = async (text) => {
+const translate = async (_event, text) => {
   try {
+    if (typeof text !== 'string') {
+      throw new TypeError(`translate expected a string, received ${typeof text}`);
+    }
     const result = await detector(text);
-    console.log(`The word "${text}" translates to "${result}"`);
+    return result[0]['translation_text'];
   } catch (error) {
-    console.error('Translation failed:', error);
+    throw error;
   }
 };
 

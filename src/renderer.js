@@ -282,7 +282,7 @@ lessonBodyDisplay.addEventListener('mouseup', (event) => {
 });
 
 translateBtn.addEventListener('click', async () => {
-  const wordToTranslate = document.getElementById('word-to-translate').value.trim();
+  const wordToTranslate = document.getElementById('word-to-translate').value;
   if (wordToTranslate) {
     try {
       const translation = await window.api.translateText(wordToTranslate);
