@@ -1,4 +1,5 @@
 import './index.css';
+import "./assets/fonts/Inter-VariableFont_opsz,wght.ttf";
 import path from 'node:path';
 
 const lessonBodyInput = document.getElementById('lesson-body-input');
@@ -7,6 +8,8 @@ const lessonList = document.getElementById('lesson-list');
 const lessonTitleInput = document.getElementById('lesson-title-input');
 const lessonTitleDisplay = document.getElementById('lesson-title-display');
 const lessonBodyDisplay = document.getElementById('lesson-body-display');
+const lessonModal = document.getElementById('lesson-modal');
+const importModal = document.getElementById('import-modal');
 const mainPage = document.getElementById('main-page');
 const lessonPage = document.getElementById('lesson-page');
 const backButton = document.getElementById('back-btn');
@@ -55,7 +58,7 @@ addLessonButton.addEventListener('click', handleAddLesson);
 
 backButton.addEventListener('click', () => {
   lessonPage.hidden = true;
-  mainPage.hidden = false;
+  lessonModal.hidden = false;
   renderLessons();
 });
 
@@ -172,7 +175,6 @@ const renderLessonBody = async (text) => {
   }
 
   return individualWordsHtml.join('');
-  //return individualWordsHtml;
 };
 
 const getLessonContent = async (lessonId) => {
@@ -261,7 +263,8 @@ lessonList.addEventListener('click', (event) => {
   if (lessonId) {
     showToast(`Selected lesson ${lessonId}`);
     currentLessonId = lessonId;
-    mainPage.hidden = true;
+    lessonModal.hidden = true;
+    importModal.hidden = true;
     lessonPage.hidden = false;
     const clickedAt = new Date().toISOString();
     updateLessonContent(lessonId, { last_opened: clickedAt });

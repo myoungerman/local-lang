@@ -51,7 +51,6 @@ app.whenReady().then(() => {
   ipcMain.handle('download-translation-model', downloadTranslationModel);
   createWindow();
   if (!fs.existsSync(env.cacheDir)) {
-    console.log(`Cache not found, creating directory.`);
     fs.mkdirSync(env.cacheDir, { recursive: true });
   }
 
@@ -82,7 +81,6 @@ const downloadTranslationModel = async () => {
     if (fs.existsSync(translationModelPath)) {
       return;
     }
-    console.log('Downloading translation model...');
     let files = [];
     for await (const file of listFiles({
       repo: 'Xenova/opus-mt-fr-en',
@@ -94,7 +92,6 @@ const downloadTranslationModel = async () => {
       if (file.path.includes('onnx') && (file.path.includes('encoder_model_quantized.onnx') || file.path.includes('decoder_model_merged_quantized.onnx'))) {
         const normalizedPath = file.path.replace(/\\/g, '/');
         files.push({ ...file, path: normalizedPath });
-        console.log(`Added file ${file.path} to download list`);
       }
       // Add the files that are not in the ONNX folder.
       if (!file.path.includes('onnx') && fileHasExtension) {
@@ -103,8 +100,8 @@ const downloadTranslationModel = async () => {
     }
 
     let saveLocation = await downloadFiles(files);
-    // When HuggingFace downloads a repo, it creates two folders called snapshots and blobs. It uses those folders to auto-update the model as new versions become available, but that structure prevents pipeline() from locating the files.
-    // To fix that, we delete the blobs folder, which contains symlinks that are irrelevant for an offline app, and move the model's files up a level from the snapshots folder.
+    // When HuggingFace downloads a repo, it creates a directory structure containing two folders called snapshots and blobs. The structure enables HuggingFace to auto-update the model as new versions become available, but it also prevents pipeline() from locating the files.
+    // To fix that, we delete the blobs folder, which is only relevant for apps that need updates, and flatten the directory by moving the model's files up a level from the snapshots folder.
     await flattenDirectory(saveLocation);
   }
   catch (error) {
@@ -120,7 +117,6 @@ const downloadFiles = async (files) => {
       path: el.path,
       cacheDir: env.cacheDir,
     });
-    console.log(`Downloaded ${el.path} to ${env.cacheDir}`);
   }
   // Return the directory to be flattened.
   return translationModelPath; 
@@ -145,18 +141,16 @@ const flattenDirectory = async (dir) => {
       for (const oldFilePath of currentFilePaths) {
         // Ex. oldFilePath = ...\snapshots\8f725e8\onnx\encoder_model_quantized.onnx -> newFilePath = ...\models--Xenova--opus-mt-fr-en\encoder_model_quantized.onnx
         const newFilePath = path.join(translationModelPath, path.basename(oldFilePath));
-        // if the destination directory already has a folder (NOT a file) with the same name, get the children of this item and move them into that folder that has the name of this folder
+        // Sometimes there are two folders named 'onnx', which causes conflicts when we copy the second folder. If the destination directory already has a folder with the same name, move the contents of this folder into that folder.
         if (fs.existsSync(newFilePath) && fs.lstatSync(newFilePath).isDirectory()) {
           const children = await fsp.readdir(oldFilePath);
           for (const child of children) {
             const oldChildPath = path.join(oldFilePath, child);
             const newChildPath = path.join(newFilePath, child);
             await fsp.rename(oldChildPath, newChildPath);
-            console.log(`Moved ${oldChildPath} to ${newChildPath}`);
           }
         } else {
           await fsp.rename(oldFilePath, newFilePath);
-          console.log(`Moved ${oldFilePath} to ${newFilePath}`);
         }
       }
     }

@@ -1,10 +1,40 @@
+@font-face {
+  font-family: "Inter";
+  src:local("Inter-VariableFont"),
+  url('./assets/fonts/Inter-VariableFont_opsz\,wght.ttf')
+}
+
 body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
+  font-family: "Inter", sans-serif;
   margin: auto;
   max-width: 38rem;
   padding: 2rem;
+  color: #A6AEAF;
+  background-color: #22272B;
+}
+
+#toolbar li {
+  list-style: none;
+  margin-bottom: 0.5rem;
+}
+
+#toolbar ul {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+nav {
+  width: 15vw;
+}
+
+.icon-color {
+  filter: invert(100%) sepia(15%) saturate(1094%) hue-rotate(21deg) brightness(102%) contrast(115%);
+}
+
+#body-container {
+  display: flex;
+  flex-direction: row;
 }
 
 .lesson-item {
