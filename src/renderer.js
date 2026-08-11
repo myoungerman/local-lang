@@ -10,6 +10,7 @@ const lessonTitleDisplay = document.getElementById('lesson-title-display');
 const lessonBodyDisplay = document.getElementById('lesson-body-display');
 const lessonModal = document.getElementById('lesson-modal');
 const importModal = document.getElementById('import-modal');
+const downloadModal = document.getElementById('download-modal');
 const mainPage = document.getElementById('main-page');
 const lessonPage = document.getElementById('lesson-page');
 const backButton = document.getElementById('back-btn');
@@ -21,9 +22,11 @@ const wordModalFamiliarity = document.getElementById('word-modal-familiarity');
 const wordModalNotes = document.getElementById('word-modal-notes');
 const wordModalSaveButton = document.getElementById('word-modal-save');
 const downloadTranslationModelButton = document.getElementById('download-translation-model-btn');
+const downloadPronunciationModelButton = document.getElementById('download-pronunciation-model-btn');
 const status = document.getElementById('status');
 const translateBtn = document.getElementById('translate-btn');
-
+const libraryToolbarButton = document.getElementById('library-toolbar-btn');
+const aiModelsToolbarButton = document.getElementById('ai-models-toolbar-btn');
 let currentLessonId = null;
 
 status.textContent = 'Status: Starting download.';
@@ -59,6 +62,22 @@ addLessonButton.addEventListener('click', handleAddLesson);
 backButton.addEventListener('click', () => {
   lessonPage.hidden = true;
   lessonModal.hidden = false;
+  renderLessons();
+});
+
+libraryToolbarButton.addEventListener('click', () => {
+  lessonPage.hidden = true;
+  downloadModal.hidden = true;
+  importModal.hidden = true;
+  lessonModal.hidden = false;
+  renderLessons();
+});
+
+aiModelsToolbarButton.addEventListener('click', () => {
+  lessonPage.hidden = true;
+  lessonModal.hidden = true;
+  importModal.hidden = true;
+  downloadModal.hidden = false;
   renderLessons();
 });
 

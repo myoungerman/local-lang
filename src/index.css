@@ -5,36 +5,65 @@
 }
 
 body {
-  font-family: "Inter", sans-serif;
+  font-family: "Inter", sans-serif, "Arial";
   margin: auto;
   max-width: 38rem;
   padding: 2rem;
   color: #A6AEAF;
   background-color: #22272B;
+  display: flex;
+  flex-direction: row;
+}
+
+#toolbar {
+  background-color: #1E2328;
 }
 
 #toolbar li {
   list-style: none;
   margin-bottom: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+}
+
+#toolbar li:hover {
+  background-color: #0E1014;
 }
 
 #toolbar ul {
   align-items: center;
   display: flex;
   flex-direction: column;
+  padding: 0;
+}
+
+#toolbar img {
+  width: 22px;
+}
+
+main {
+  padding-left: 48px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+}
+
+#toolbar p {
+  font-weight: bold;
+  font-size: 0.68rem;
 }
 
 nav {
-  width: 15vw;
+  min-width: 80px;
+  height: 100vh;
 }
 
-.icon-color {
-  filter: invert(100%) sepia(15%) saturate(1094%) hue-rotate(21deg) brightness(102%) contrast(115%);
-}
-
-#body-container {
+#lesson-list {
   display: flex;
   flex-direction: row;
+  gap: 7px;
 }
 
 .lesson-item {
@@ -42,6 +71,33 @@ nav {
   margin-bottom: 0.75rem;
   padding: 0.75rem;
   cursor: pointer;
+}
+
+#lesson-modal {
+  margin-right: 60px;
+  width: 1191px;
+}
+
+#lesson-modal-header {
+  display: flex;
+  flex-direction: row;
+}
+
+#import-lesson-btn {
+  margin-left: 605px;
+  background-color: #42A564;
+  color: #FFFEFE;
+  stroke-color: #000000;
+  stroke-width: 1px;
+  font-weight: bold;
+  font-size: 0.875rem;
+  width: fit-content;
+  min-height: 36px;
+  white-space: nowrap;
+  margin-right: 56px;
+  border: none;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .word-token {

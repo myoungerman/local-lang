@@ -5,23 +5,25 @@
     <title>Local Lang</title>
   </head>
   <body>
-    <div id="body-container">
       <nav id="toolbar">
         <ul>
-          <li>
-            <img src="./src/assets/images/lucide--library.svg" alt="Library" class="icon-color">
+          <li id="library-toolbar-btn">
+            <img src="./src/assets/images/lucide--library.svg" alt="Library">
             <p>Library</p>
           </li>
-          <li>
-            <img src="./src/assets/images/lucide--brain-cog.svg" alt="AI models" class="icon-color">
+          <li id="ai-models-toolbar-btn">
+            <img src="./src/assets/images/lucide--brain-cog.svg" alt="AI models">
             <p>AI models</p>
           </li>
         </ul>
       </nav>
-      <div id="main-page">
+      <main>
         <div id="lesson-modal">
+          <div id="lesson-modal-header">
+            <input type="search" id="lesson-search" placeholder="Search library">
+            <button id="import-lesson-btn"><img src="./src/assets/images/lucide--download.svg" alt="Import lesson">Import lesson</button>
+          </div>
           <h1>Lessons</h1>
-          <button id="import-lesson-btn">Import lesson</button>
           <div id="lesson-list"></div>
         </div>
         <div id="import-modal" hidden>
@@ -32,10 +34,21 @@
           <button id="add-lesson-btn">Add lesson</button>
         </div>
         <div id="download-modal" hidden>
+          <p>LocalLang can install free AI models to pronounce words and translate text, all without internet.</p>
           <input id="word-to-translate" value="Bonjour">
           <button id="translate-btn">Translate</button>
+
+          <div class="model-card">
+            <p>Pronunciation Model</p>
+            <p>Size: 1.5 MB</p>
+            <button id="download-pronunciation-model-btn">Download pronunciation model</button>
+          </div>
+          <div class="model-card">
+            <p>Translation Model</p>
+            <p>Size: 2.0 MB</p>
+            <button id="download-translation-model-btn">Download translation model</button>
+          </div>
           <p id="status">Status: Not downloading.</p>
-          <button id="download-translation-model-btn">Download translation model</button>
         </div>
         <div id="lesson-page" hidden>
           <button id="back-btn">Back</button>
@@ -65,8 +78,7 @@
             <button id="word-modal-save">Save</button>
           </div>
         </div>
-      </div>
-    </div>
+      </main>
   </body>
   <script type="module" src="./src/renderer.js"></script>
 </html>
