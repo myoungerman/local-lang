@@ -20,10 +20,13 @@
       <main>
         <div id="lesson-modal">
           <div id="lesson-modal-header">
-            <input type="search" id="lesson-search" placeholder="Search library">
+            <form id="search-form">
+              <input type="search" id="lesson-search-input" placeholder="Search library">
+              <img src="./src/assets/images/lucide--search.svg" alt="Search">
+            </form>
             <button id="import-lesson-btn"><img src="./src/assets/images/lucide--download.svg" alt="Import lesson">Import lesson</button>
           </div>
-          <h1>Lessons</h1>
+          <h1>Lesson Library</h1>
           <div id="lesson-list"></div>
         </div>
         <div id="import-modal" hidden>

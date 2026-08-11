@@ -9,7 +9,7 @@ body {
   margin: auto;
   max-width: 38rem;
   padding: 2rem;
-  color: #A6AEAF;
+  color: #F5F5EB;
   background-color: #22272B;
   display: flex;
   flex-direction: row;
@@ -83,21 +83,74 @@ nav {
   flex-direction: row;
 }
 
+#lesson-search-input {
+  background: none;
+  border: none;
+  flex: 1;
+  padding-left: 11px;
+  font-size: 0.938rem;
+}
+
+#lesson-search-input:focus {
+  color: #F5F5EB;
+  outline: none;
+}
+
+#lesson-search-input::placeholder {
+  color: #F5F5EB;
+}
+
+#search-form {
+  display: flex;
+  flex-direction: row;
+  border: 1px solid #64686C;
+  border-radius: 7px;
+  width: 342px;
+}
+
+#search-form img {
+  width: 43px;
+  padding-right: 12px;
+  padding-left: 15px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  max-width: 32px;
+  border: 1px solid transparent;
+}
+
+#search-form img:hover {
+  cursor: pointer;
+}
+
+#search-form:focus-within img {
+  border: 1px solid #fbbf2b;
+  border-top-right-radius: 7px;
+  border-bottom-right-radius: 7px;
+}
+
 #import-lesson-btn {
+  display: inline-flex;
   margin-left: 605px;
   background-color: #42A564;
   color: #FFFEFE;
-  stroke-color: #000000;
+  stroke: #000000;
   stroke-width: 1px;
   font-weight: bold;
   font-size: 0.875rem;
-  width: fit-content;
+  width: 146px;
   min-height: 36px;
   white-space: nowrap;
   margin-right: 56px;
   border: none;
   padding-left: 15px;
   padding-right: 15px;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+}
+
+#import-lesson-btn img {
+  width: 16px;
 }
 
 .word-token {
