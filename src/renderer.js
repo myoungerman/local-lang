@@ -109,6 +109,7 @@ const getFamiliarityClass = (familiarity) => {
   if (value === 2) return 'familiarity-2';
   if (value === 3) return 'familiarity-3';
   if (value === 4) return 'familiarity-4';
+  if (value === 5) return 'familiarity-5';
   return '';
 };
 
@@ -138,7 +139,6 @@ const renderLessonBody = async (text) => {
     }
     return escapeHtml(part);
     })
-    //.join('');
 
   const spanRegex = new RegExp(`<span[^>]*data-word="([^"]*)"[^>]*>`); // Looks for a <span> tag and captures the value of its data-word attribute
 
@@ -280,7 +280,6 @@ lessonList.addEventListener('click', (event) => {
 
   const lessonId = lessonItem.id;
   if (lessonId) {
-    showToast(`Selected lesson ${lessonId}`);
     currentLessonId = lessonId;
     lessonModal.hidden = true;
     importModal.hidden = true;
