@@ -127,7 +127,8 @@ const renderLessonBody = async (text) => {
 
   // Get list of compound words
   const compoundWords = await window.api.getCompoundWords();
-  const compoundWordsInText = compoundWords.filter((el) => text.includes(el.word.toLowerCase()));
+  const normalizedText = text.toLowerCase();
+  const compoundWordsInText = compoundWords.filter((el) => normalizedText.includes(el.word.toLowerCase()));
 
   // Parse individual words into strings of styled HTML spans
   const individualWordsHtml = parts.map((part) => {
@@ -235,7 +236,7 @@ const closeWordModal = () => {
 };
 
 const saveWordProgress = async () => {
-  const word = wordModal.dataset.currentWord;
+  const word = wordModal.dataset.currentWord.toLowerCase();
   if (!word) return;
 
   const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
