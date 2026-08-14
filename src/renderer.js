@@ -89,7 +89,13 @@ const renderLessons = async () => {
     return bTime - aTime;
   });
 
-  lessonList.innerHTML = sortedLessons.map(lesson => `<div id="${lesson.lesson_id}" class="lesson-item"><h3>${lesson.title}</h3></div>`).join('');
+  lessonList.innerHTML = sortedLessons.map(lesson => 
+    `<div id="${lesson.lesson_id}" class="lesson-item">
+    <h3>${lesson.title}</h3>
+    <button data-action="edit">Edit lesson</button>
+    <button data-action="delete">Delete lesson</button>
+    </div>`
+  ).join('');
 };
 
 renderLessons();
@@ -274,8 +280,8 @@ const updateLessonContent = async (lessonId, updates) => {
 
 lessonList.addEventListener('click', (event) => {
   const lessonItem = event.target.closest('.lesson-item');
-
-  if (!lessonItem) {
+  const wasButton = event.target instanceof HTMLButtonElement;
+  if (!lessonItem || wasButton) {
     return;
   }
 
@@ -321,4 +327,22 @@ downloadTranslationModelButton.addEventListener('click', async () => {
     showToast('Translation model downloaded successfully.');
   } catch (error) {
     showToast('Translation model download failed. Check console for details.', true);}
+});
+
+lessonList.addEventListener('click', async (e) => {
+  try {
+    const button = e.target.closest('button[data-action]');
+    if (!button) return;
+
+    const lessonDiv = button.closest('.lesson-item');
+    const lessonId = lessonDiv.id;
+    const action = button.dataset.action;
+    
+    if (action.toString() == 'delete') {
+      await window.api.deleteLesson(lessonId);
+      renderLessons();
+    }
+  } catch (error) {
+    console.log(`Error: ${error}`);
+  }
 });
