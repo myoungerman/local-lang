@@ -12,7 +12,7 @@ let db;
 env.allowRemoteModels = false;
 env.cacheDir = path.join(app.getPath('userData'), 'cache');
 const translationModelPath = path.join(env.cacheDir, 'models--Xenova--opus-mt-fr-en');
-
+let translationModelInstalled = false;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -49,9 +49,13 @@ app.whenReady().then(() => {
   setUpHandlers(db);
   ipcMain.handle('translate-text', translate);
   ipcMain.handle('download-translation-model', downloadTranslationModel);
+  ipcMain.handle('check-for-translation-model', async () => { return translationModelInstalled});
   createWindow();
   if (!fs.existsSync(env.cacheDir)) {
     fs.mkdirSync(env.cacheDir, { recursive: true });
+  }
+  if (fs.existsSync(translationModelPath)) {
+    translationModelInstalled = true;
   }
 
   // On OS X it's common to re-create a window in the app when the
@@ -103,6 +107,7 @@ const downloadTranslationModel = async () => {
     // When HuggingFace downloads a repo, it creates a directory structure containing two folders called snapshots and blobs. The structure enables HuggingFace to auto-update the model as new versions become available, but it also prevents pipeline() from locating the files.
     // To fix that, we delete the blobs folder, which is only relevant for apps that need updates, and flatten the directory by moving the model's files up a level from the snapshots folder.
     await flattenDirectory(saveLocation);
+    translationModelInstalled = true;
   }
   catch (error) {
     console.error('listFiles failed:', error);

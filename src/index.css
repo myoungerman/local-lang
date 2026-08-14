@@ -49,7 +49,7 @@ nav{ min-width:80px; height:100vh }
    ------------------------- */
 #toolbar{ background-color:var(--surface) }
 #toolbar ul{ display:flex; flex-direction:column; padding:0; align-items:center; gap:0.5rem }
-#toolbar li{ list-style:none; display:flex; flex-direction:column; align-items:center; justify-content:center }
+#toolbar li{ list-style:none; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; }
 #toolbar li:hover{ background-color:#0E1014 }
 #toolbar img{ width:22px }
 #toolbar p{ font-weight:700; font-size:.68rem }

@@ -24,10 +24,11 @@ const wordModalSaveButton = document.getElementById('word-modal-save');
 const downloadTranslationModelButton = document.getElementById('download-translation-model-btn');
 const downloadPronunciationModelButton = document.getElementById('download-pronunciation-model-btn');
 const status = document.getElementById('status');
-const translateBtn = document.getElementById('translate-btn');
 const libraryToolbarButton = document.getElementById('library-toolbar-btn');
 const aiModelsToolbarButton = document.getElementById('ai-models-toolbar-btn');
 let currentLessonId = null;
+let checkedForTranslationModel = false;
+let modelExists = false;
 
 status.textContent = 'Status: Starting download.';
 
@@ -226,6 +227,13 @@ const openWordModal = async (word) => {
     wordModalDefinition.innerHTML = `
       <div><strong>Definition:</strong> ${escapeHtml(translation.trans_list || '')}</div>
     `;
+  } else if (modelExists) {
+    try {
+      const translation = await window.api.translateText(word);
+      wordModalDefinition.innerHTML = `<div>${translation}</div>`;
+    } catch (error) {
+      showToast('Translation failed. Check console for details.', true);
+    }
   } else {
     wordModalDefinition.innerHTML = `<div>No dictionary entry found for this word.</div>`;
   }
@@ -278,8 +286,11 @@ const updateLessonContent = async (lessonId, updates) => {
   await window.api.updateLesson(lessonId, updates);
 };
 
-lessonList.addEventListener('click', (event) => {
+// Load the clicked lesson.
+lessonList.addEventListener('click', async (event) => {
   const lessonItem = event.target.closest('.lesson-item');
+  // There's another listener for each div in the list that handles when the user clicks the delete or edit buttons.
+  // But clicking those buttons still triggers this listener, which we don't want. 
   const wasButton = event.target instanceof HTMLButtonElement;
   if (!lessonItem || wasButton) {
     return;
@@ -294,6 +305,12 @@ lessonList.addEventListener('click', (event) => {
     const clickedAt = new Date().toISOString();
     updateLessonContent(lessonId, { last_opened: clickedAt });
     getLessonContent(lessonId);
+
+    if (!checkedForTranslationModel) {
+      modelExists = await window.api.checkTranslationModelExists();
+      console.log(`Model exists? ${modelExists}`);
+      checkedForTranslationModel = true;
+    }
   }
 });
 
@@ -307,18 +324,6 @@ lessonBodyDisplay.addEventListener('mouseup', (event) => {
   range.setEndAfter(endNode);
   const rangeText = range.toString();
   openWordModal(rangeText);
-});
-
-translateBtn.addEventListener('click', async () => {
-  const wordToTranslate = document.getElementById('word-to-translate').value;
-  if (wordToTranslate) {
-    try {
-      const translation = await window.api.translateText(wordToTranslate);
-      showToast(`Translation: ${translation}`);
-    } catch (error) {
-      showToast('Translation failed. Check console for details.', true);
-    }
-  }
 });
 
 downloadTranslationModelButton.addEventListener('click', async () => {
