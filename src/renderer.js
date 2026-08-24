@@ -29,6 +29,9 @@ const aiModelsToolbarButton = document.getElementById('ai-models-toolbar-btn');
 let currentLessonId = null;
 let checkedForTranslationModel = false;
 let modelExists = false;
+let prevX;
+let prevY;
+let blockClick = false;
 
 status.textContent = 'Status: Starting download.';
 
@@ -216,6 +219,7 @@ const getLessonContent = async (lessonId) => {
 };
 
 const openWordModal = async (word) => {
+  console.log(`selected word is: ${word}`);
   const [translation, progress] = await Promise.all([
     window.api.getTranslationForWord(word),
     window.api.getWordProgress(word),
@@ -225,10 +229,12 @@ const openWordModal = async (word) => {
 
   if (translation) {
     wordModalDefinition.innerHTML = `
-      <div><strong>Definition:</strong> ${escapeHtml(translation.trans_list || '')}</div>
+      <div><strong>Definition:</strong> ${translation.trans_list || translation.definition}</div>
     `;
   } else if (modelExists) {
     try {
+      console.log('using llm');
+      wordModalDefinition.innerHTML = `<div>Translating...</div>`;
       const translation = await window.api.translateText(word);
       wordModalDefinition.innerHTML = `<div>${translation}</div>`;
     } catch (error) {
@@ -253,10 +259,11 @@ const saveWordProgress = async () => {
   const word = wordModal.dataset.currentWord.toLowerCase();
   if (!word) return;
 
+  const definition = wordModalDefinition.innerHTML.split('</strong>')[1].split('</div>')[0];
   const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
   const notes = wordModalNotes.value.trim();
   const isCompound = word.includes(' ') ? 1 : 0;
-  await window.api.saveWordProgress(word, familiarity, notes, isCompound);
+  await window.api.saveWordProgress(word, definition, familiarity, notes, isCompound);
   showToast('Word details saved.');
   closeWordModal();
 
@@ -273,12 +280,17 @@ wordModal.addEventListener('click', (event) => {
 });
 wordModalSaveButton.addEventListener('click', saveWordProgress);
 
+// Open the word modal when an individual word is clicked.
 lessonBodyDisplay.addEventListener('click', (event) => {
-  const wordToken = event.target.closest('.word-token');
-  if (!wordToken) return;
-  const word = wordToken.dataset.word;
-  if (word) {
-    openWordModal(word);
+  if (!blockClick) {
+    console.log('click');
+    const wordToken = event.target.closest('.word-token');
+    console.log(`wordToken: ${wordToken}`);
+    if (!wordToken) return;
+    const word = wordToken.dataset.word;
+    if (word) {
+      openWordModal(word);
+    }
   }
 });
 
@@ -308,22 +320,34 @@ lessonList.addEventListener('click', async (event) => {
 
     if (!checkedForTranslationModel) {
       modelExists = await window.api.checkTranslationModelExists();
-      console.log(`Model exists? ${modelExists}`);
       checkedForTranslationModel = true;
     }
   }
 });
 
-// Lets you select compound words by highlighting them
-lessonBodyDisplay.addEventListener('mouseup', (event) => {
-  const startNode = document.getSelection().anchorNode;
-  const endNode = document.getSelection().focusNode;
-  const range = document.createRange();
+lessonBodyDisplay.addEventListener('mousedown', (e) => {
+  prevX = e.clientX;
+  prevY = e.clientY;
+});
 
-  range.setStart(startNode, 0);
-  range.setEndAfter(endNode);
-  const rangeText = range.toString();
-  openWordModal(rangeText);
+// Lets you select more than one word by clicking and dragging over the words that should be translated. 
+lessonBodyDisplay.addEventListener('mouseup', (e) => {
+  // If the mouse position has changed since mousedown, the user is selecting multiple words, so stop
+  // the default click event from firing since that's only used for individual words.
+  if (e.clientX !== prevX || e.clientY !== prevY) {
+    console.log('mouseup');
+    blockClick = true;
+    const startNode = document.getSelection().anchorNode;
+    const endNode = document.getSelection().focusNode;
+    const range = document.createRange();
+
+    range.setStart(startNode, 0);
+    range.setEndAfter(endNode);
+    const rangeText = range.toString().trim();
+    openWordModal(rangeText);
+  } else {
+    blockClick = false;
+  }
 });
 
 downloadTranslationModelButton.addEventListener('click', async () => {

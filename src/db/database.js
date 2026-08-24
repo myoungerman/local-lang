@@ -31,6 +31,7 @@ class AppDatabase{
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS word_progress (
         word TEXT PRIMARY KEY,
+        definition TEXT,
         familiarity INTEGER DEFAULT 1,
         notes TEXT,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -88,10 +89,20 @@ class AppDatabase{
   }
 
   getTranslationByFrenchWord(frenchWord){
+    // Check the French dictionary database.
     const stmt = this.translationDb.prepare(
-      'SELECT written_rep, trans_list, max_score, rel_importance FROM simple_translation WHERE written_rep = ? COLLATE NOCASE LIMIT 1'
+      'SELECT written_rep, trans_list FROM simple_translation WHERE written_rep = ? COLLATE NOCASE LIMIT 1'
     );
-    return stmt.get(frenchWord);
+    const foundWord = stmt.get(frenchWord);
+    // There was no match in the dictionary database, so check the user's database of saved words too in case they've already saved a definition.
+    if (!foundWord) {
+      const checkUserDb = this.db.prepare(
+        'SELECT definition FROM word_progress WHERE word = ? COLLATE NOCASE LIMIT 1'
+      );
+      return checkUserDb.get(frenchWord);
+    } else {
+      return stmt.get(frenchWord);
+    }
   }
 
   getWordProgress(word){
@@ -99,18 +110,19 @@ class AppDatabase{
     return stmt.get(word);
   }
 
-  saveWordProgress(word, familiarity, notes, is_compound){
+  saveWordProgress(word, definition, familiarity, notes, is_compound){
     const stmt = this.db.prepare(`
-      INSERT INTO word_progress (word, familiarity, notes, updated_at, is_compound)
-      VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)
+      INSERT INTO word_progress (word, definition, familiarity, notes, updated_at, is_compound)
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
       ON CONFLICT(word) DO UPDATE SET
         familiarity = excluded.familiarity,
+        definition = excluded.definition,
         notes = excluded.notes,
         updated_at = CURRENT_TIMESTAMP,
         is_compound = excluded.is_compound
     `);
-    stmt.run(word, familiarity, notes, is_compound);
-    return { word, familiarity, notes, is_compound };
+    stmt.run(word, definition, familiarity, notes, is_compound);
+    return { word, definition, familiarity, notes, is_compound };
   }
 
   close(){
