@@ -226,14 +226,13 @@ const openWordModal = async (word) => {
   ]);
 
   wordModalTitle.textContent = word;
-
-  if (translation) {
+  // If the translation definition exists in either table, display that. Otherwise translate using the LLM.
+  if (translation.trans_list || translation.definition) {
     wordModalDefinition.innerHTML = `
-      <div><strong>Definition:</strong> ${translation.trans_list || translation.definition}</div>
+    <div><strong>Definition:</strong> ${translation.trans_list ?? translation.definition}</div>
     `;
   } else if (modelExists) {
     try {
-      console.log('using llm');
       wordModalDefinition.innerHTML = `<div>Translating...</div>`;
       const translation = await window.api.translateText(word);
       wordModalDefinition.innerHTML = `<div>${translation}</div>`;
@@ -283,9 +282,7 @@ wordModalSaveButton.addEventListener('click', saveWordProgress);
 // Open the word modal when an individual word is clicked.
 lessonBodyDisplay.addEventListener('click', (event) => {
   if (!blockClick) {
-    console.log('click');
     const wordToken = event.target.closest('.word-token');
-    console.log(`wordToken: ${wordToken}`);
     if (!wordToken) return;
     const word = wordToken.dataset.word;
     if (word) {
@@ -335,7 +332,6 @@ lessonBodyDisplay.addEventListener('mouseup', (e) => {
   // If the mouse position has changed since mousedown, the user is selecting multiple words, so stop
   // the default click event from firing since that's only used for individual words.
   if (e.clientX !== prevX || e.clientY !== prevY) {
-    console.log('mouseup');
     blockClick = true;
     const startNode = document.getSelection().anchorNode;
     const endNode = document.getSelection().focusNode;
