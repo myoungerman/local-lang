@@ -219,17 +219,16 @@ const getLessonContent = async (lessonId) => {
 };
 
 const openWordModal = async (word) => {
-  console.log(`selected word is: ${word}`);
   const [translation, progress] = await Promise.all([
     window.api.getTranslationForWord(word),
     window.api.getWordProgress(word),
   ]);
-
   wordModalTitle.textContent = word;
   // If the translation definition exists in either table, display that. Otherwise translate using the LLM.
-  if (translation.trans_list || translation.definition) {
+  const definition = translation?.trans_list ?? translation?.definition;
+  if (definition) {
     wordModalDefinition.innerHTML = `
-    <div><strong>Definition:</strong> ${translation.trans_list ?? translation.definition}</div>
+    <div><strong>Definition:</strong> ${definition}</div>
     `;
   } else if (modelExists) {
     try {
@@ -250,34 +249,32 @@ const openWordModal = async (word) => {
 };
 
 const closeWordModal = () => {
-  wordModal.classList.add('hidden');
   wordModal.dataset.currentWord = '';
+  wordModal.classList.add('hidden');
 };
 
 const saveWordProgress = async () => {
   const word = wordModal.dataset.currentWord.toLowerCase();
   if (!word) return;
 
-  const definition = wordModalDefinition.innerHTML.split('</strong>')[1].split('</div>')[0];
+  const definition = wordModalDefinition.textContent
+    .replace(/^Definition:\s*/, '')
+    .trim();
   const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
   const notes = wordModalNotes.value.trim();
   const isCompound = word.includes(' ') ? 1 : 0;
   await window.api.saveWordProgress(word, definition, familiarity, notes, isCompound);
   showToast('Word details saved.');
-  closeWordModal();
 
   if (currentLessonId) {
     await getLessonContent(currentLessonId);
   }
 };
 
-wordModalCloseButton.addEventListener('click', closeWordModal);
-wordModal.addEventListener('click', (event) => {
-  if (event.target === wordModal) {
-    closeWordModal();
-  }
+wordModalCloseButton.addEventListener('click', () => {
+  saveWordProgress();
+  closeWordModal();
 });
-wordModalSaveButton.addEventListener('click', saveWordProgress);
 
 // Open the word modal when an individual word is clicked.
 lessonBodyDisplay.addEventListener('click', (event) => {
@@ -371,3 +368,18 @@ lessonList.addEventListener('click', async (e) => {
     console.log(`Error: ${error}`);
   }
 });
+
+lessonPage.addEventListener('click', (e) => {
+  // If the word modal is visible and the user clicked anything that's not a span, close the modal.
+  // Note: The modal should remain visible if they click a span because the new word will use the modal anyhow.
+  const wordModalIsVisible = !wordModal.classList.contains('hidden');
+  const tagName = e.target.tagName.toUpperCase();
+  console.log(`clicked ${tagName}`);
+  if (wordModalIsVisible && tagName !== 'SPAN') {
+    saveWordProgress();
+    closeWordModal();
+  }
+  if (wordModalIsVisible && tagName === 'SPAN') {
+    saveWordProgress();
+  }
+}, {capture: true});

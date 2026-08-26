@@ -44,6 +44,8 @@ main{
 
 nav{ min-width:80px; height:100vh }
 
+.locked{ pointer-events: none;}
+
 /* -------------------------
    Toolbar
    ------------------------- */
@@ -71,6 +73,15 @@ nav{ min-width:80px; height:100vh }
 }
 #lesson-search-input:focus{ color:var(--text); outline:none }
 #lesson-search-input::placeholder{ color:var(--text) }
+
+/* -------------------------
+   Lesson body
+   ------------------------- */
+
+#lesson-body-container {
+  position: relative;
+  min-height: 400px;
+}
 
 /* -------------------------
    Search form
@@ -142,3 +153,5 @@ nav{ min-width:80px; height:100vh }
 .word-field select{ width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:0.5rem }
 
 #word-modal-definition{ margin-top:1rem; font-size:0.95rem; line-height:1.5 }
+
+#word-modal{ position: absolute; inset: 0; width: 381px; height: max-content; margin: auto; z-index: 1;}
