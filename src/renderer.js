@@ -31,8 +31,9 @@ const translationModelCard = document.getElementById('translation-model-card');
 
 let currentLessonId = null;
 let checkedForTranslationModel = false;
-let translationModelExists = false;
-let ttsModelExists = false;
+let translationModelInstalled = false;
+let checkedForTtsModel = false;
+let ttsModelInstalled = false;
 let prevX;
 let prevY;
 let blockClick = false;
@@ -87,16 +88,25 @@ aiModelsToolbarButton.addEventListener('click', async () => {
   importModal.hidden = true;
 
   if (!checkedForTranslationModel) {
-    translationModelExists = await window.api.checkTranslationModelExists();
+    translationModelInstalled = await window.api.checkTranslationModelExists();
     checkedForTranslationModel = true;
   }
 
-  // Update the UI if any models are installed.
-  if (ttsModelExists) {
-    ttsModelCard.querySelector('.installation-status').classList.toggle('hidden');
+  if (!checkedForTtsModel) {
+    ttsModelInstalled = await window.api.checkTtsModelExists();
+    checkedForTtsModel = true;
   }
-  if (translationModelExists) {
-    translationModelCard.querySelector('.installation-status').classList.toggle('hidden');
+
+  // Update the UI for already installed models.
+  if (ttsModelInstalled) {
+    ttsModelCard.querySelector('.installation-status').hidden = false;
+    const ttsButton = ttsModelCard.querySelector('button');
+    if (ttsButton) ttsButton.disabled = true;
+  }
+  if (translationModelInstalled) {
+    translationModelCard.querySelector('.installation-status').hidden = false;
+    const translationButton = translationModelCard.querySelector('button');
+    if (translationButton) translationButton.disabled = true;
   }
 
   downloadModal.hidden = false;
@@ -247,7 +257,7 @@ const openWordModal = async (word) => {
     wordModalDefinition.innerHTML = `
     <div><strong>Definition:</strong> ${definition}</div>
     `;
-  } else if (translationModelExists) {
+  } else if (translationModelInstalled) {
     try {
       wordModalDefinition.innerHTML = `<div>Translating...</div>`;
       const translation = await window.api.translateText(word);
@@ -330,7 +340,7 @@ lessonList.addEventListener('click', async (event) => {
     getLessonContent(lessonId);
 
     if (!checkedForTranslationModel) {
-      translationModelExists = await window.api.checkTranslationModelExists();
+      translationModelInstalled = await window.api.checkTranslationModelExists();
       checkedForTranslationModel = true;
     }
   }
