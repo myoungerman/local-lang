@@ -37,16 +37,24 @@
           <button id="add-lesson-btn">Add lesson</button>
         </div>
         <div id="download-modal" hidden>
-          <p>LocalLang can install free AI models to pronounce words and translate text, all without internet.</p>
-          <div class="model-card">
+          <p>LocalLang uses your computer's own hardware and free AI models to pronounce words and translate text. You'll need an internet connection to download the models, but once they're downloaded, those features will work without internet.</p>
+          <div id="tts-model-card" class="model-card">
             <p>Pronunciation Model</p>
             <p>Size: 1.5 MB</p>
             <button id="download-pronunciation-model-btn">Download pronunciation model</button>
+            <div class="installation-status" hidden>
+              <img src="./src/assets/images/lucide--circle-check.svg">
+              <p>Model installed.</p>
+            </div>
           </div>
-          <div class="model-card">
+          <div id="translation-model-card" class="model-card">
             <p>Translation Model</p>
             <p>Size: 2.0 MB</p>
             <button id="download-translation-model-btn">Download translation model</button>
+              <div class="installation-status" hidden>
+                <img src="./src/assets/images/lucide--circle-check.svg">
+                <p>Model installed.</p>
+            </div>
           </div>
           <p id="status">Status: Not downloading.</p>
         </div>

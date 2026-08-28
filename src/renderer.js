@@ -26,9 +26,13 @@ const downloadPronunciationModelButton = document.getElementById('download-pronu
 const status = document.getElementById('status');
 const libraryToolbarButton = document.getElementById('library-toolbar-btn');
 const aiModelsToolbarButton = document.getElementById('ai-models-toolbar-btn');
+const ttsModelCard = document.getElementById('tts-model-card');
+const translationModelCard = document.getElementById('translation-model-card');
+
 let currentLessonId = null;
 let checkedForTranslationModel = false;
-let modelExists = false;
+let translationModelExists = false;
+let ttsModelExists = false;
 let prevX;
 let prevY;
 let blockClick = false;
@@ -77,12 +81,25 @@ libraryToolbarButton.addEventListener('click', () => {
   renderLessons();
 });
 
-aiModelsToolbarButton.addEventListener('click', () => {
+aiModelsToolbarButton.addEventListener('click', async () => {
   lessonPage.hidden = true;
   lessonModal.hidden = true;
   importModal.hidden = true;
+
+  if (!checkedForTranslationModel) {
+    translationModelExists = await window.api.checkTranslationModelExists();
+    checkedForTranslationModel = true;
+  }
+
+  // Update the UI if any models are installed.
+  if (ttsModelExists) {
+    ttsModelCard.querySelector('.installation-status').classList.toggle('hidden');
+  }
+  if (translationModelExists) {
+    translationModelCard.querySelector('.installation-status').classList.toggle('hidden');
+  }
+
   downloadModal.hidden = false;
-  renderLessons();
 });
 
 const renderLessons = async () => {
@@ -230,7 +247,7 @@ const openWordModal = async (word) => {
     wordModalDefinition.innerHTML = `
     <div><strong>Definition:</strong> ${definition}</div>
     `;
-  } else if (modelExists) {
+  } else if (translationModelExists) {
     try {
       wordModalDefinition.innerHTML = `<div>Translating...</div>`;
       const translation = await window.api.translateText(word);
@@ -313,7 +330,7 @@ lessonList.addEventListener('click', async (event) => {
     getLessonContent(lessonId);
 
     if (!checkedForTranslationModel) {
-      modelExists = await window.api.checkTranslationModelExists();
+      translationModelExists = await window.api.checkTranslationModelExists();
       checkedForTranslationModel = true;
     }
   }

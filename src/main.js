@@ -13,6 +13,7 @@ env.allowRemoteModels = false;
 env.cacheDir = path.join(app.getPath('userData'), 'cache');
 const translationModelPath = path.join(env.cacheDir, 'models--Xenova--opus-mt-fr-en');
 let translationModelInstalled = false;
+let ttsModelInstalled = false;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -49,7 +50,8 @@ app.whenReady().then(() => {
   setUpHandlers(db);
   ipcMain.handle('translate-text', translate);
   ipcMain.handle('download-translation-model', downloadTranslationModel);
-  ipcMain.handle('check-for-translation-model', async () => { return translationModelInstalled});
+  ipcMain.handle('check-for-translation-model', async () => { return translationModelInstalled });
+  ipcMain.handle('check-for-tts-model', async () => { return ttsModelInstalled });
   createWindow();
   if (!fs.existsSync(env.cacheDir)) {
     fs.mkdirSync(env.cacheDir, { recursive: true });
@@ -181,4 +183,3 @@ const translate = async (_event, text) => {
     throw error;
   }
 };
-

@@ -57,12 +57,17 @@ nav{ min-width:80px; height:100vh }
 #toolbar p{ font-weight:700; font-size:.68rem }
 
 /* -------------------------
+   Model page
+   ------------------------- */
+.model-card{ border-radius: 0.5rem; margin-bottom:0.75rem; padding:0.75rem; background-color: #1A1C1E; }
+.installation-status{ display: flex; flex-direction: row;}
+.installation-status img {width: 16px; margin-right: 8px; align-items: center;}
+
+/* -------------------------
    Lesson list / items
    ------------------------- */
 #lesson-list{ display:flex; flex-direction:row; gap:0.4375rem } /* 7px */
-.lesson-item{
-  border:1px solid black; margin-bottom:0.75rem; padding:0.75rem; cursor:pointer;
-}
+.lesson-item{ border-radius: 0.5rem; margin-bottom:0.75rem; padding:0.75rem; cursor:pointer; background-color: #1A1C1E; }
 
 #lesson-modal{ margin-right:60px; width:1191px }
 #lesson-modal-header{ display:flex; flex-direction:row }
@@ -99,13 +104,14 @@ nav{ min-width:80px; height:100vh }
 /* -------------------------
    Buttons
    ------------------------- */
-#import-lesson-btn{
+button{
   display:inline-flex; align-items:center; justify-content:center; gap:7px;
   background:var(--accent); color:var(--text); font-weight:700; font-size:.875rem;
-  width:146px; min-height:36px; white-space:nowrap; margin:0 56px 0 605px; border:none; padding:0 15px; border-radius:7px
+  min-height:36px; white-space:nowrap; border:none; padding:0 15px; border-radius:7px
 }
-#import-lesson-btn:hover{ background:var(--accent-hover) }
-#import-lesson-btn img{ width:16px }
+button:hover{ background:var(--accent-hover) }
+button img{ width:16px }
+#import-lesson-btn { margin:0 56px 0 605px; width:146px; }
 
 /* -------------------------
    Word tokens
