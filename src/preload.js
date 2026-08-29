@@ -15,6 +15,7 @@ const api = {
   getCompoundWords: () => ipcRenderer.invoke('get-compound-words'),
   translateText: (text) => ipcRenderer.invoke('translate-text', text),
   downloadTranslationModel: () => ipcRenderer.invoke('download-translation-model'),
+  downloadTtsModel: () => ipcRenderer.invoke('download-tts-model'),
   checkTranslationModelExists: () => ipcRenderer.invoke('check-for-translation-model'),
   checkTtsModelExists: () => ipcRenderer.invoke('check-for-tts-model'),
 }   

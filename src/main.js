@@ -12,6 +12,7 @@ let db;
 env.allowRemoteModels = false;
 env.cacheDir = path.join(app.getPath('userData'), 'cache');
 const translationModelPath = path.join(env.cacheDir, 'models--Xenova--opus-mt-fr-en');
+const ttsModelPath = path.join(env.cacheDir, 'Supertonic-TTS-ONNX');
 let translationModelInstalled = false;
 let ttsModelInstalled = false;
 
@@ -50,6 +51,7 @@ app.whenReady().then(() => {
   setUpHandlers(db);
   ipcMain.handle('translate-text', translate);
   ipcMain.handle('download-translation-model', downloadTranslationModel);
+  ipcMain.handle('download-tts-model', downloadTtsModel);
   ipcMain.handle('check-for-translation-model', async () => { return translationModelInstalled });
   ipcMain.handle('check-for-tts-model', async () => { return ttsModelInstalled });
   createWindow();
@@ -114,6 +116,10 @@ const downloadTranslationModel = async () => {
   catch (error) {
     console.error('listFiles failed:', error);
   }
+};
+
+const downloadTtsModel = async () => {
+
 };
 
 const downloadFiles = async (files) => {

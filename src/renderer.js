@@ -20,9 +20,8 @@ const wordModalTitle = document.getElementById('word-modal-title');
 const wordModalDefinition = document.getElementById('word-modal-definition');
 const wordModalFamiliarity = document.getElementById('word-modal-familiarity');
 const wordModalNotes = document.getElementById('word-modal-notes');
-const wordModalSaveButton = document.getElementById('word-modal-save');
 const downloadTranslationModelButton = document.getElementById('download-translation-model-btn');
-const downloadPronunciationModelButton = document.getElementById('download-pronunciation-model-btn');
+const downloadTtsModelButton = document.getElementById('download-pronunciation-model-btn');
 const status = document.getElementById('status');
 const libraryToolbarButton = document.getElementById('library-toolbar-btn');
 const aiModelsToolbarButton = document.getElementById('ai-models-toolbar-btn');
@@ -86,18 +85,20 @@ aiModelsToolbarButton.addEventListener('click', async () => {
   lessonPage.hidden = true;
   lessonModal.hidden = true;
   importModal.hidden = true;
+  updateInstallUi();
+  downloadModal.hidden = false;
+});
 
+const updateInstallUi = async () => {
   if (!checkedForTranslationModel) {
     translationModelInstalled = await window.api.checkTranslationModelExists();
     checkedForTranslationModel = true;
   }
-
   if (!checkedForTtsModel) {
     ttsModelInstalled = await window.api.checkTtsModelExists();
     checkedForTtsModel = true;
   }
 
-  // Update the UI for already installed models.
   if (ttsModelInstalled) {
     ttsModelCard.querySelector('.installation-status').hidden = false;
     const ttsButton = ttsModelCard.querySelector('button');
@@ -108,9 +109,7 @@ aiModelsToolbarButton.addEventListener('click', async () => {
     const translationButton = translationModelCard.querySelector('button');
     if (translationButton) translationButton.disabled = true;
   }
-
-  downloadModal.hidden = false;
-});
+};
 
 const renderLessons = async () => {
   const lessons = await window.api.getAllLessons();
@@ -370,10 +369,20 @@ lessonBodyDisplay.addEventListener('mouseup', (e) => {
   }
 });
 
+downloadTtsModelButton.addEventListener('click', async () => {
+  try {
+    const result = await window.api.downloadTtsModel();
+    showToast('Tts model downloaded successfully.');
+    updateInstallUi();
+  } catch (error) {
+    showToast('Tts model download failed. Check console for details.', true);}
+});
+
 downloadTranslationModelButton.addEventListener('click', async () => {
   try {
     const result = await window.api.downloadTranslationModel();
     showToast('Translation model downloaded successfully.');
+    updateInstallUi();
   } catch (error) {
     showToast('Translation model download failed. Check console for details.', true);}
 });
