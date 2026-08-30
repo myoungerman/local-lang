@@ -5,14 +5,14 @@ import { promises as fsp } from 'fs';
 import started from 'electron-squirrel-startup';
 import AppDatabase from './db/database';
 import setUpHandlers from './db/ipcHandlers'; 
-import { listFiles, downloadFileToCacheDir } from "@huggingface/hub";
+import { listFiles, downloadFileToCacheDir, snapshotDownload } from "@huggingface/hub";
 import { pipeline, env } from "@xenova/transformers";
 
 let db;
 env.allowRemoteModels = false;
 env.cacheDir = path.join(app.getPath('userData'), 'cache');
 const translationModelPath = path.join(env.cacheDir, 'models--Xenova--opus-mt-fr-en');
-const ttsModelPath = path.join(env.cacheDir, 'Supertonic-TTS-ONNX');
+const ttsModelPath = path.join(env.cacheDir, 'models--onnx-community--Supertonic-TTS-ONNX');
 let translationModelInstalled = false;
 let ttsModelInstalled = false;
 
@@ -90,6 +90,7 @@ const downloadTranslationModel = async () => {
       return;
     }
     let files = [];
+    // Make a list of all the files that should be downloaded. The repo has some large files that we'll ignore.
     for await (const file of listFiles({
       repo: 'Xenova/opus-mt-fr-en',
       revision: 'main',
@@ -107,10 +108,10 @@ const downloadTranslationModel = async () => {
       }
     }
 
-    let saveLocation = await downloadFiles(files);
+    await downloadFiles(files, 'Xenova/opus-mt-fr-en');
     // When HuggingFace downloads a repo, it creates a directory structure containing two folders called snapshots and blobs. The structure enables HuggingFace to auto-update the model as new versions become available, but it also prevents pipeline() from locating the files.
     // To fix that, we delete the blobs folder, which is only relevant for apps that need updates, and flatten the directory by moving the model's files up a level from the snapshots folder.
-    await flattenDirectory(saveLocation);
+    await flattenDirectory(translationModelPath, 'llm');
     translationModelInstalled = true;
   }
   catch (error) {
@@ -119,25 +120,37 @@ const downloadTranslationModel = async () => {
 };
 
 const downloadTtsModel = async () => {
-
+  try {
+    if (fs.existsSync(ttsModelPath)) {
+      return;
+    }
+    await snapshotDownload({
+      repo: 'onnx-community/Supertonic-TTS-ONNX',
+      cacheDir: env.cacheDir,
+    });
+    await flattenDirectory(ttsModelPath, 'tts');
+    ttsModelInstalled = true;
+    console.log('installed tts model');
+  } catch (error) {
+    console.log(`Error: ${error}`);
+  }
 };
 
-const downloadFiles = async (files) => {
+const downloadFiles = async (files, repo) => {
   for (const el of files) {
-    const savedFile = await downloadFileToCacheDir({
-      repo: 'Xenova/opus-mt-fr-en',
+    await downloadFileToCacheDir({
+      repo: repo,
       revision: 'main',
       path: el.path,
       cacheDir: env.cacheDir,
     });
   }
-  // Return the directory to be flattened.
-  return translationModelPath; 
 };
 
-const flattenDirectory = async (dir) => {
+const flattenDirectory = async (dir, modelType) => {
   const blobsDir = path.join(dir, 'blobs');
   const snapshotsDir = path.join(dir, 'snapshots');
+  console.log(`flattening ${blobsDir} and ${snapshotsDir}`);
   // Delete the blobs folder.
   if (fs.existsSync(blobsDir)) {
     await fsp.rm(blobsDir, { recursive: true, force: true });
@@ -153,7 +166,15 @@ const flattenDirectory = async (dir) => {
       const currentFilePaths = files.map(file => path.join(subFolderPath, file));
       for (const oldFilePath of currentFilePaths) {
         // Ex. oldFilePath = ...\snapshots\8f725e8\onnx\encoder_model_quantized.onnx -> newFilePath = ...\models--Xenova--opus-mt-fr-en\encoder_model_quantized.onnx
-        const newFilePath = path.join(translationModelPath, path.basename(oldFilePath));
+        let newFilePath;
+        switch (modelType) {
+          case 'tts':
+            newFilePath = path.join(ttsModelPath, path.basename(oldFilePath));
+            break;
+          case 'llm':
+            newFilePath = path.join(translationModelPath, path.basename(oldFilePath));
+            break;
+        }
         // Sometimes there are two folders named 'onnx', which causes conflicts when we copy the second folder. If the destination directory already has a folder with the same name, move the contents of this folder into that folder.
         if (fs.existsSync(newFilePath) && fs.lstatSync(newFilePath).isDirectory()) {
           const children = await fsp.readdir(oldFilePath);
