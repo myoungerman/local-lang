@@ -166,5 +166,8 @@ button img{ width:16px }
 .word-field select{ width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:0.5rem }
 
 #word-modal-definition{ margin-top:1rem; font-size:0.95rem; line-height:1.5 }
-
 #word-modal{ position: absolute; inset: 0; width: 381px; height: max-content; margin: auto; z-index: 1;}
+#word-modal-header{display: flex; flex-direction: row;}
+#word-modal-header img{ margin-right: 8px; min-width: 23px;}
+#word-modal-header img:hover{ background:var(--accent-hover); border-radius: 0.5rem;}
+#word-modal-header button{ margin-left: auto}

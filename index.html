@@ -65,8 +65,11 @@
         </div>
 
         <div id="word-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="word-modal-title">
-          <button id="word-modal-close" class="modal-close" aria-label="Close word details">×</button>
-          <h2 id="word-modal-title">Word details</h2>
+          <div id="word-modal-header">
+            <img id="word-modal-pronunciation" src="src/assets/images/lucide--volume-2.svg">
+            <h2 id="word-modal-title">Word</h2>
+            <button id="word-modal-close" class="modal-close" aria-label="Close word details">×</button>
+          </div>
           <div id="word-modal-definition" class="word-field"></div>
           <div class="word-field">
             <label for="word-modal-familiarity">Familiarity</label>

@@ -11,7 +11,6 @@ const lessonBodyDisplay = document.getElementById('lesson-body-display');
 const lessonModal = document.getElementById('lesson-modal');
 const importModal = document.getElementById('import-modal');
 const downloadModal = document.getElementById('download-modal');
-const mainPage = document.getElementById('main-page');
 const lessonPage = document.getElementById('lesson-page');
 const backButton = document.getElementById('back-btn');
 const wordModal = document.getElementById('word-modal');
@@ -27,15 +26,15 @@ const libraryToolbarButton = document.getElementById('library-toolbar-btn');
 const aiModelsToolbarButton = document.getElementById('ai-models-toolbar-btn');
 const ttsModelCard = document.getElementById('tts-model-card');
 const translationModelCard = document.getElementById('translation-model-card');
+const pronunciationIcon = document.getElementById('word-modal-pronunciation');
 
 let currentLessonId = null;
-let checkedForTranslationModel = false;
 let translationModelInstalled = false;
-let checkedForTtsModel = false;
 let ttsModelInstalled = false;
 let prevX;
 let prevY;
 let blockClick = false;
+let ttsIsAlreadyProcessing = false;
 
 status.textContent = 'Status: Starting download.';
 
@@ -90,13 +89,11 @@ aiModelsToolbarButton.addEventListener('click', async () => {
 });
 
 const updateInstallUi = async () => {
-  if (!checkedForTranslationModel) {
+  if (!translationModelInstalled) {
     translationModelInstalled = await window.api.checkTranslationModelExists();
-    checkedForTranslationModel = true;
   }
-  if (!checkedForTtsModel) {
+  if (!ttsModelInstalled) {
     ttsModelInstalled = await window.api.checkTtsModelExists();
-    checkedForTtsModel = true;
   }
 
   if (ttsModelInstalled) {
@@ -302,6 +299,19 @@ wordModalCloseButton.addEventListener('click', () => {
   closeWordModal();
 });
 
+pronunciationIcon.addEventListener('click', () => {
+  if (ttsIsAlreadyProcessing) {
+    return;
+  } else {
+    // Call the TTS and pass the selected word or phrase
+    try {
+      
+    } catch (error) {
+      console.log(error);
+    }
+  }
+});
+
 // Open the word modal when an individual word is clicked.
 lessonBodyDisplay.addEventListener('click', (event) => {
   if (!blockClick) {
@@ -338,9 +348,8 @@ lessonList.addEventListener('click', async (event) => {
     updateLessonContent(lessonId, { last_opened: clickedAt });
     getLessonContent(lessonId);
 
-    if (!checkedForTranslationModel) {
+    if (!translationModelInstalled) {
       translationModelInstalled = await window.api.checkTranslationModelExists();
-      checkedForTranslationModel = true;
     }
   }
 });
@@ -371,7 +380,7 @@ lessonBodyDisplay.addEventListener('mouseup', (e) => {
 
 downloadTtsModelButton.addEventListener('click', async () => {
   try {
-    const result = await window.api.downloadTtsModel();
+    await window.api.downloadTtsModel();
     showToast('Tts model downloaded successfully.');
     updateInstallUi();
   } catch (error) {
@@ -380,7 +389,7 @@ downloadTtsModelButton.addEventListener('click', async () => {
 
 downloadTranslationModelButton.addEventListener('click', async () => {
   try {
-    const result = await window.api.downloadTranslationModel();
+    await window.api.downloadTranslationModel();
     showToast('Translation model downloaded successfully.');
     updateInstallUi();
   } catch (error) {
@@ -410,7 +419,6 @@ lessonPage.addEventListener('click', (e) => {
   // Note: The modal should remain visible if they click a span because the new word will use the modal anyhow.
   const wordModalIsVisible = !wordModal.classList.contains('hidden');
   const tagName = e.target.tagName.toUpperCase();
-  console.log(`clicked ${tagName}`);
   if (wordModalIsVisible && tagName !== 'SPAN') {
     saveWordProgress();
     closeWordModal();
@@ -418,4 +426,4 @@ lessonPage.addEventListener('click', (e) => {
   if (wordModalIsVisible && tagName === 'SPAN') {
     saveWordProgress();
   }
-}, {capture: true});
+}, {capture: true}); // This listener uses the capture flag since I need it to fire before the other click event listener.
