@@ -239,22 +239,26 @@ const translate = async (_event, text) => {
 const pronounceText = async (_event, text) => {
   try {
     const tts = await pipeline('text-to-speech', 'models--onnx-community--Supertonic-TTS-ONNX', {
-    cache_dir: path.join(env.cacheDir),
-    local_files_only: true,
-  });
-    const voicePath = path.join(ttsModelPath, 'voices', 'F1.bin');
-    const normalizedPath = voicePath.replace(/\\/g, '/');
-    //const voiceFile = await fsp.readFile(normalizedPath);
-    const voiceFile = normalizedPath;
-        console.log(`voiceFile is ${voiceFile}`);
-    const input_text = 'This is really cool!';
-    const audio = await tts(input_text, {
-      speaker_embeddings: voiceFile,
-      num_inference_steps: 5, // Higher = better quality (typically 1-50)
-      speed: 1.05, // Higher = faster speech (typically 0.8-1.2)
+      cache_dir: path.join(env.cacheDir),
+      local_files_only: true,
     });
-    await audio.save('output.wav'); // or `audio.toBlob()`;
 
+    const voicePath = path.join(ttsModelPath, 'voices', 'F1.bin');
+    const voiceBuffer = await fsp.readFile(voicePath);
+    const voiceData = new Float32Array(
+      voiceBuffer.buffer,
+      voiceBuffer.byteOffset,
+      voiceBuffer.byteLength / Float32Array.BYTES_PER_ELEMENT,
+    );
+
+    const input_text = `Bonjour, c'est le premier jour de la semaine!`;
+    const audio = await tts(input_text, {
+      speaker_embeddings: voiceData,
+      num_inference_steps: 5,
+      speed: 1.05,
+    });
+
+    await audio.save('output.wav');
   } catch (error) {
     console.error(`TTS failed with error ${error}`);
   }
