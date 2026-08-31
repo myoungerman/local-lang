@@ -30,8 +30,9 @@
   },
   "dependencies": {
     "@huggingface/hub": "^2.14.3",
-    "@xenova/transformers": "^2.17.2",
+    "@huggingface/transformers": "^4.2.0",
     "better-sqlite3": "^12.11.1",
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "sf": "^0.2.0"
   }
 }

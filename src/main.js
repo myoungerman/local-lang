@@ -1,16 +1,20 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import path from 'node:path';
+import path, { normalize } from 'node:path';
 import fs from 'node:fs';
 import { promises as fsp } from 'fs';
 import started from 'electron-squirrel-startup';
 import AppDatabase from './db/database';
 import setUpHandlers from './db/ipcHandlers'; 
 import { listFiles, downloadFileToCacheDir, snapshotDownload } from "@huggingface/hub";
-import { pipeline, env } from "@xenova/transformers";
+import { pipeline, env } from '@huggingface/transformers';
+import soundfile from 'sf';
 
 let db;
 env.allowRemoteModels = false;
 env.cacheDir = path.join(app.getPath('userData'), 'cache');
+env.cacheDir = env.cacheDir.replace(/\\/g, '/');
+env.localModelPath = path.join(env.cacheDir);
+env.localModelPath = env.localModelPath.replace(/\\/g, '/');
 const translationModelPath = path.join(env.cacheDir, 'models--Xenova--opus-mt-fr-en');
 const ttsModelPath = path.join(env.cacheDir, 'models--onnx-community--Supertonic-TTS-ONNX');
 let translationModelInstalled = false;
@@ -54,6 +58,7 @@ app.whenReady().then(() => {
   ipcMain.handle('download-tts-model', downloadTtsModel);
   ipcMain.handle('check-for-translation-model', async () => { return translationModelInstalled });
   ipcMain.handle('check-for-tts-model', async () => { return ttsModelInstalled });
+  ipcMain.handle('pronounce-text', pronounceText );
   createWindow();
   if (!fs.existsSync(env.cacheDir)) {
     fs.mkdirSync(env.cacheDir, { recursive: true });
@@ -194,12 +199,29 @@ const flattenDirectory = async (dir, modelType) => {
   }
 }
 
-const detector = async (text) => {
+/* const detector = async (text) => {
   const result = await pipeline("translation", "models--Xenova--opus-mt-fr-en", {
     cache_dir: path.join(env.cacheDir),
     local_files_only: true,
   });
   return result(text);
+}; */
+
+const detector = async (text, task, modelName) => {
+  const result = await pipeline(task, modelName, {
+    cache_dir: path.join(env.cacheDir),
+    local_files_only: true,
+  });
+
+  if (task === 'text-to-speech') {
+    return result(text, {
+      speaker_embeddings: path.join(ttsModelPath, 'voices', 'F1.bin'),
+      num_inference_steps: 5,
+      speed: 1,
+    });
+  } else {
+      return result(text);
+  }
 };
 
 const translate = async (_event, text) => {
@@ -207,9 +229,33 @@ const translate = async (_event, text) => {
     if (typeof text !== 'string') {
       throw new TypeError(`translate expected a string, received ${typeof text}`);
     }
-    const result = await detector(text);
+    const result = await detector(text, 'translation', 'models--Xenova--opus-mt-fr-en');
     return result[0]['translation_text'];
   } catch (error) {
     throw error;
+  }
+};
+
+const pronounceText = async (_event, text) => {
+  try {
+    const tts = await pipeline('text-to-speech', 'models--onnx-community--Supertonic-TTS-ONNX', {
+    cache_dir: path.join(env.cacheDir),
+    local_files_only: true,
+  });
+    const voicePath = path.join(ttsModelPath, 'voices', 'F1.bin');
+    const normalizedPath = voicePath.replace(/\\/g, '/');
+    //const voiceFile = await fsp.readFile(normalizedPath);
+    const voiceFile = normalizedPath;
+        console.log(`voiceFile is ${voiceFile}`);
+    const input_text = 'This is really cool!';
+    const audio = await tts(input_text, {
+      speaker_embeddings: voiceFile,
+      num_inference_steps: 5, // Higher = better quality (typically 1-50)
+      speed: 1.05, // Higher = faster speech (typically 0.8-1.2)
+    });
+    await audio.save('output.wav'); // or `audio.toBlob()`;
+
+  } catch (error) {
+    console.error(`TTS failed with error ${error}`);
   }
 };

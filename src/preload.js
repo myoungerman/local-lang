@@ -18,6 +18,7 @@ const api = {
   downloadTtsModel: () => ipcRenderer.invoke('download-tts-model'),
   checkTranslationModelExists: () => ipcRenderer.invoke('check-for-translation-model'),
   checkTtsModelExists: () => ipcRenderer.invoke('check-for-tts-model'),
+  pronounceText: (word) => ipcRenderer.invoke('pronounce-text', word),
 }   
 
 contextBridge.exposeInMainWorld('api', api);

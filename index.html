@@ -37,10 +37,10 @@
           <button id="add-lesson-btn">Add lesson</button>
         </div>
         <div id="download-modal" hidden>
-          <p>LocalLang uses your computer's own hardware and free AI models to pronounce words and translate text. You'll need an internet connection to download the models, but once they're downloaded, those features will work without internet.</p>
+          <p>LocalLang uses your computer's own hardware to run free AI models that can pronounce words and translate text. You'll need an internet connection to download the models, but once they're downloaded, those features will work without internet.</p>
           <div id="tts-model-card" class="model-card">
-            <p>Pronunciation Model</p>
-            <p>Size: 1.5 MB</p>
+            <h2>Pronunciation Model</h2>
+            <p>Size: ~263 MB</p>
             <button id="download-pronunciation-model-btn">Download pronunciation model</button>
             <div class="installation-status" hidden>
               <img src="./src/assets/images/lucide--circle-check.svg">
@@ -48,15 +48,14 @@
             </div>
           </div>
           <div id="translation-model-card" class="model-card">
-            <p>Translation Model</p>
-            <p>Size: 2.0 MB</p>
+            <h2>Translation Model</h2>
+            <p>Size: ~133 MB</p>
             <button id="download-translation-model-btn">Download translation model</button>
               <div class="installation-status" hidden>
                 <img src="./src/assets/images/lucide--circle-check.svg">
                 <p>Model is installed.</p>
             </div>
           </div>
-          <p id="status">Status: Not downloading.</p>
         </div>
         <div id="lesson-page" hidden>
           <button id="back-btn">Back</button>

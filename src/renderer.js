@@ -21,7 +21,6 @@ const wordModalFamiliarity = document.getElementById('word-modal-familiarity');
 const wordModalNotes = document.getElementById('word-modal-notes');
 const downloadTranslationModelButton = document.getElementById('download-translation-model-btn');
 const downloadTtsModelButton = document.getElementById('download-pronunciation-model-btn');
-const status = document.getElementById('status');
 const libraryToolbarButton = document.getElementById('library-toolbar-btn');
 const aiModelsToolbarButton = document.getElementById('ai-models-toolbar-btn');
 const ttsModelCard = document.getElementById('tts-model-card');
@@ -35,8 +34,6 @@ let prevX;
 let prevY;
 let blockClick = false;
 let ttsIsAlreadyProcessing = false;
-
-status.textContent = 'Status: Starting download.';
 
 const showToast = (message, isError = false) => {
   const toast = document.createElement('div');
@@ -242,7 +239,14 @@ const getLessonContent = async (lessonId) => {
 };
 
 const openWordModal = async (word) => {
-  const [translation, progress] = await Promise.all([
+try {
+  await window.api.pronounceText(word);
+} catch (error) {
+  console.error(`Unable to generate audio: ${error}`);
+}
+
+try {
+    const [translation, progress] = await Promise.all([
     window.api.getTranslationForWord(word),
     window.api.getWordProgress(word),
   ]);
@@ -269,6 +273,9 @@ const openWordModal = async (word) => {
   wordModalNotes.value = progress?.notes ?? '';
   wordModal.dataset.currentWord = word;
   wordModal.classList.remove('hidden');
+} catch (error) {
+  console.error(`Unable to translate ${word}. Error: ${error}`);
+}
 };
 
 const closeWordModal = () => {
@@ -299,13 +306,14 @@ wordModalCloseButton.addEventListener('click', () => {
   closeWordModal();
 });
 
-pronunciationIcon.addEventListener('click', () => {
+pronunciationIcon.addEventListener('click', async () => {
   if (ttsIsAlreadyProcessing) {
+    showToast(`This word's audio is already being processed.`);
     return;
   } else {
     // Call the TTS and pass the selected word or phrase
     try {
-      
+      await window.api.pronounceText();
     } catch (error) {
       console.log(error);
     }
