@@ -7,7 +7,9 @@ import AppDatabase from './db/database';
 import setUpHandlers from './db/ipcHandlers'; 
 import { listFiles, downloadFileToCacheDir, snapshotDownload } from "@huggingface/hub";
 import { pipeline, env } from '@huggingface/transformers';
-import soundfile from 'sf';
+import ffmpegPath from 'ffmpeg-static';
+import { execFile } from 'node:child_process';
+
 
 let db;
 env.allowRemoteModels = false;
@@ -16,7 +18,9 @@ env.cacheDir = env.cacheDir.replace(/\\/g, '/');
 env.localModelPath = path.join(env.cacheDir);
 env.localModelPath = env.localModelPath.replace(/\\/g, '/');
 const translationModelPath = path.join(env.cacheDir, 'models--Xenova--opus-mt-fr-en');
-const ttsModelPath = path.join(env.cacheDir, 'models--onnx-community--Supertonic-TTS-ONNX');
+const ttsModelFolderName = 'models--onnx-community--Supertonic-TTS-2-ONNX';
+const ttsRepoName = 'onnx-community/Supertonic-TTS-2-ONNX';
+const ttsModelPath = path.join(env.cacheDir, ttsModelFolderName);
 let translationModelInstalled = false;
 let ttsModelInstalled = false;
 
@@ -133,7 +137,7 @@ const downloadTtsModel = async () => {
       return;
     }
     await snapshotDownload({
-      repo: 'onnx-community/Supertonic-TTS-ONNX',
+      repo: ttsRepoName,
       cacheDir: env.cacheDir,
     });
     await flattenDirectory(ttsModelPath, 'tts');
@@ -199,29 +203,12 @@ const flattenDirectory = async (dir, modelType) => {
   }
 }
 
-/* const detector = async (text) => {
-  const result = await pipeline("translation", "models--Xenova--opus-mt-fr-en", {
-    cache_dir: path.join(env.cacheDir),
-    local_files_only: true,
-  });
-  return result(text);
-}; */
-
 const detector = async (text, task, modelName) => {
   const result = await pipeline(task, modelName, {
     cache_dir: path.join(env.cacheDir),
     local_files_only: true,
   });
-
-  if (task === 'text-to-speech') {
-    return result(text, {
-      speaker_embeddings: path.join(ttsModelPath, 'voices', 'F1.bin'),
-      num_inference_steps: 5,
-      speed: 1,
-    });
-  } else {
-      return result(text);
-  }
+  return result(text);
 };
 
 const translate = async (_event, text) => {
@@ -236,9 +223,17 @@ const translate = async (_event, text) => {
   }
 };
 
-const pronounceText = async (_event, text) => {
+const withContext = async (step, fn) => {
   try {
-    const tts = await pipeline('text-to-speech', 'models--onnx-community--Supertonic-TTS-ONNX', {
+    return await fn();
+  } catch (error) {
+    throw new Error(`${step} failed: ${error.message}`, { cause: error });
+  }
+};
+
+/* const pronounceText = async (_event, text) => {
+  try {
+    const tts = await pipeline('text-to-speech', ttsModelFolderName, {
       cache_dir: path.join(env.cacheDir),
       local_files_only: true,
     });
@@ -251,15 +246,74 @@ const pronounceText = async (_event, text) => {
       voiceBuffer.byteLength / Float32Array.BYTES_PER_ELEMENT,
     );
 
-    const input_text = `Bonjour, c'est le premier jour de la semaine!`;
+    const input_text = `<fr>${text}</fr>`;
     const audio = await tts(input_text, {
       speaker_embeddings: voiceData,
-      num_inference_steps: 5,
-      speed: 1.05,
+      num_inference_steps: 50,
+      speed: 1,
     });
 
-    await audio.save('output.wav');
+    const wavPath = 'output.wav';
+    const opusPath = 'output.opus';
+    await audio.save(wavPath);
+    await wavToOpus(wavPath, opusPath);
   } catch (error) {
     console.error(`TTS failed with error ${error}`);
   }
 };
+ */
+
+const pronounceText = async (_event, text) => {
+  if (typeof text !== 'string' || !text.trim()) {
+    throw new Error('pronounceText expected a non-empty string');
+  }
+
+  const tts = await withContext('Loading TTS pipeline', () =>
+    pipeline('text-to-speech', ttsModelFolderName, {
+      cache_dir: path.join(env.cacheDir),
+      local_files_only: true,
+    })
+  );
+
+  const voiceData = await withContext('Loading voice data', async () => {
+    const voicePath = path.join(ttsModelPath, 'voices', 'F1.bin');
+    const buffer = await fsp.readFile(voicePath);
+    return new Float32Array(
+      buffer.buffer,
+      buffer.byteOffset,
+      buffer.byteLength / Float32Array.BYTES_PER_ELEMENT,
+    );
+  });
+
+  const audio = await withContext('Generating speech', () =>
+    tts(`<fr>${text}</fr>`, {
+      speaker_embeddings: voiceData,
+      num_inference_steps: 50,
+      speed: 1,
+    })
+  );
+
+  await withContext('Saving audio output', async () => {
+    const wavPath = path.join(app.getPath('temp'), 'output.wav');
+    const opusPath = path.join(app.getPath('temp'), 'output.opus');
+    await audio.save(wavPath);
+    await wavToOpus(wavPath, opusPath);
+    return { wavPath, opusPath };
+  });
+};
+
+async function wavToOpus(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    const executablePath = ffmpegPath.replace(
+      `${path.sep}app.asar${path.sep}`,
+      `${path.sep}app.asar.unpacked${path.sep}`,
+    );
+
+    execFile(executablePath, [
+      '-y',
+      '-i', inputPath,
+      '-c:a', 'libopus', '-b:a', '48k', '-ac', '1',
+      outputPath,
+    ], (err) => (err ? reject(err) : resolve(outputPath)));
+  });
+}

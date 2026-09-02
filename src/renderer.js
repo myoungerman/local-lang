@@ -1,6 +1,5 @@
 import './index.css';
 import "./assets/fonts/Inter-VariableFont_opsz,wght.ttf";
-import path from 'node:path';
 
 const lessonBodyInput = document.getElementById('lesson-body-input');
 const addLessonButton = document.getElementById('add-lesson-btn');
@@ -240,6 +239,9 @@ const getLessonContent = async (lessonId) => {
 
 const openWordModal = async (word) => {
 try {
+  if (typeof word !== "string") {
+    throw new Error('Invalid word provided');
+  }
   await window.api.pronounceText(word);
 } catch (error) {
   console.error(`Unable to generate audio: ${error}`);
