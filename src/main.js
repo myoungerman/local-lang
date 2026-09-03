@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import path, { normalize } from 'node:path';
+import path from 'node:path';
 import fs from 'node:fs';
 import { promises as fsp } from 'fs';
 import started from 'electron-squirrel-startup';
@@ -9,7 +9,6 @@ import { listFiles, downloadFileToCacheDir, snapshotDownload } from "@huggingfac
 import { pipeline, env } from '@huggingface/transformers';
 import ffmpegPath from 'ffmpeg-static';
 import { execFile } from 'node:child_process';
-
 
 let db;
 env.allowRemoteModels = false;
@@ -231,38 +230,6 @@ const withContext = async (step, fn) => {
   }
 };
 
-/* const pronounceText = async (_event, text) => {
-  try {
-    const tts = await pipeline('text-to-speech', ttsModelFolderName, {
-      cache_dir: path.join(env.cacheDir),
-      local_files_only: true,
-    });
-
-    const voicePath = path.join(ttsModelPath, 'voices', 'F1.bin');
-    const voiceBuffer = await fsp.readFile(voicePath);
-    const voiceData = new Float32Array(
-      voiceBuffer.buffer,
-      voiceBuffer.byteOffset,
-      voiceBuffer.byteLength / Float32Array.BYTES_PER_ELEMENT,
-    );
-
-    const input_text = `<fr>${text}</fr>`;
-    const audio = await tts(input_text, {
-      speaker_embeddings: voiceData,
-      num_inference_steps: 50,
-      speed: 1,
-    });
-
-    const wavPath = 'output.wav';
-    const opusPath = 'output.opus';
-    await audio.save(wavPath);
-    await wavToOpus(wavPath, opusPath);
-  } catch (error) {
-    console.error(`TTS failed with error ${error}`);
-  }
-};
- */
-
 const pronounceText = async (_event, text) => {
   if (typeof text !== 'string' || !text.trim()) {
     throw new Error('pronounceText expected a non-empty string');
@@ -288,20 +255,17 @@ const pronounceText = async (_event, text) => {
   const audio = await withContext('Generating speech', () =>
     tts(`<fr>${text}</fr>`, {
       speaker_embeddings: voiceData,
-      num_inference_steps: 50,
+      num_inference_steps: 25,
       speed: 1,
     })
   );
 
-  await withContext('Saving audio output', async () => {
-    const wavPath = path.join(app.getPath('temp'), 'output.wav');
-    const opusPath = path.join(app.getPath('temp'), 'output.opus');
-    await audio.save(wavPath);
-    await wavToOpus(wavPath, opusPath);
-    return { wavPath, opusPath };
-  });
+  // audio.data returns a Float32Array per the docs: https://huggingface.co/docs/transformers.js/en/api/utils/audio#module_utils/audio.RawAudio+data
+  const audioBytes = audio.data;
+  return audioBytes;
 };
 
+// Not currently using this, but saving it for later in case narrating entire lessons requires a different audio approach.
 async function wavToOpus(inputPath, outputPath) {
   return new Promise((resolve, reject) => {
     const executablePath = ffmpegPath.replace(

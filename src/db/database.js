@@ -35,7 +35,8 @@ class AppDatabase{
         familiarity INTEGER DEFAULT 1,
         notes TEXT,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        is_compound BOOLEAN DEFAULT FALSE
+        is_compound BOOLEAN DEFAULT FALSE,
+        audio BLOB
       )
     `);
   }
@@ -106,7 +107,7 @@ class AppDatabase{
   }
 
   getWordProgress(word){
-    const stmt = this.db.prepare('SELECT word, familiarity, notes FROM word_progress WHERE word = ?');
+    const stmt = this.db.prepare('SELECT word, familiarity, notes, audio FROM word_progress WHERE word = ?');
     return stmt.get(word);
   }
 

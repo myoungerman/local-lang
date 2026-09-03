@@ -33,6 +33,7 @@ let prevX;
 let prevY;
 let blockClick = false;
 let ttsIsAlreadyProcessing = false;
+const audioCtx = new AudioContext();
 
 const showToast = (message, isError = false) => {
   const toast = document.createElement('div');
@@ -238,46 +239,44 @@ const getLessonContent = async (lessonId) => {
 };
 
 const openWordModal = async (word) => {
-try {
-  if (typeof word !== "string") {
-    throw new Error('Invalid word provided');
-  }
-  await window.api.pronounceText(word);
-} catch (error) {
-  console.error(`Unable to generate audio: ${error}`);
-}
-
-try {
-    const [translation, progress] = await Promise.all([
-    window.api.getTranslationForWord(word),
-    window.api.getWordProgress(word),
-  ]);
-  wordModalTitle.textContent = word;
-  // If the translation definition exists in either table, display that. Otherwise translate using the LLM.
-  const definition = translation?.trans_list ?? translation?.definition;
-  if (definition) {
-    wordModalDefinition.innerHTML = `
-    <div><strong>Definition:</strong> ${definition}</div>
-    `;
-  } else if (translationModelInstalled) {
-    try {
-      wordModalDefinition.innerHTML = `<div>Translating...</div>`;
-      const translation = await window.api.translateText(word);
-      wordModalDefinition.innerHTML = `<div>${translation}</div>`;
-    } catch (error) {
-      showToast('Translation failed. Check console for details.', true);
+  try {
+      const [translation, progress] = await Promise.all([
+      window.api.getTranslationForWord(word),
+      window.api.getWordProgress(word),
+    ]);
+    wordModalTitle.textContent = word;
+    // If the translation definition exists in either table, display that. Otherwise translate using the LLM.
+    const definition = translation?.trans_list ?? translation?.definition;
+    if (definition) {
+      wordModalDefinition.innerHTML = `
+      <div><strong>Definition:</strong> ${definition}</div>
+      `;
+    } else if (translationModelInstalled) {
+      try {
+        wordModalDefinition.innerHTML = `<div>Translating...</div>`;
+        const translation = await window.api.translateText(word);
+        wordModalDefinition.innerHTML = `<div>${translation}</div>`;
+      } catch (error) {
+        showToast('Translation failed. Check console for details.', true);
+      }
+    } else {
+      wordModalDefinition.innerHTML = `<div>No dictionary entry found for this word.</div>`;
     }
-  } else {
-    wordModalDefinition.innerHTML = `<div>No dictionary entry found for this word.</div>`;
-  }
 
-  wordModalFamiliarity.value = progress?.familiarity ?? 1;
-  wordModalNotes.value = progress?.notes ?? '';
-  wordModal.dataset.currentWord = word;
-  wordModal.classList.remove('hidden');
-} catch (error) {
-  console.error(`Unable to translate ${word}. Error: ${error}`);
-}
+    wordModalFamiliarity.value = progress?.familiarity ?? 1;
+    wordModalNotes.value = progress?.notes ?? '';
+    wordModal.dataset.currentWord = word;
+    wordModal.classList.remove('hidden');
+
+   if (progress?.audio) {
+    console.log('audio exists');
+   } else {
+    const audioBytes = await window.api.pronounceText(word);
+    playBytesAsAudio(audioBytes);
+   }
+  } catch (error) {
+    console.error(`Unable to translate ${word}. Error: ${error}`);
+  }
 };
 
 const closeWordModal = () => {
@@ -437,3 +436,12 @@ lessonPage.addEventListener('click', (e) => {
     saveWordProgress();
   }
 }, {capture: true}); // This listener uses the capture flag since I need it to fire before the other click event listener.
+
+const playBytesAsAudio = (bytesArr) => {
+  const buffer = audioCtx.createBuffer(1, bytesArr.length, 44100) // I got the sample rate from the tts model's config.json
+  buffer.copyToChannel(bytesArr, 0);
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioCtx.destination);
+  source.start();
+};
