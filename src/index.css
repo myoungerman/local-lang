@@ -1,89 +1,173 @@
-body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
-  margin: auto;
-  max-width: 38rem;
-  padding: 2rem;
+@font-face {
+  font-family: "Inter";
+  src: local("Inter-VariableFont"),
+       url('./assets/fonts/Inter-VariableFont_opsz\,wght.ttf');
 }
 
-.lesson-item {
-  border: 1px solid black;
-  margin-bottom: 0.75rem;
-  padding: 0.75rem;
-  cursor: pointer;
+/* hide native search clear button for consistency */
+input[type="search"]::-webkit-search-cancel-button{ display:none; }
+
+/* -------------------------
+   Design tokens & resets
+   ------------------------- */
+:root{
+  --bg: #22272B;
+  --surface: #1E2328;
+  --muted: #64686C;
+  --text: #F5F5EB;
+  --accent: #42A564;
+  --accent-hover: #67B27A;
+  --warning: #FAB719;
+  --token-default: #253853;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
 }
 
-.word-token {
-  cursor: pointer;
-  color: #1d4ed8;
+*{box-sizing:border-box}
+
+/* -------------------------
+   Layout / global
+   ------------------------- */
+body{
+  font-family: "Inter", sans-serif, Arial;
+  min-width: 38rem;
+  color:var(--text);
+  background-color:var(--bg);
+  display:flex; flex-direction:row;
+  margin: 1.875rem 0 0 0; /* 30px top */
 }
 
-.word-token:hover {
-  text-decoration: underline;
+main{
+  padding: 0 3rem; /* 48px -> 3rem */
+  display:flex; flex-direction:column; flex-wrap:wrap;
 }
 
-.toast {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  padding: 8px 12px;
-  color: white;
-  z-index: 1000;
-  border-radius: 4px;
+nav{ min-width:80px; height:100vh }
+
+.locked{ pointer-events: none;}
+
+/* -------------------------
+   Toolbar
+   ------------------------- */
+#toolbar{ background-color:var(--surface) }
+#toolbar ul{ display:flex; flex-direction:column; padding:0; align-items:center; gap:0.5rem }
+#toolbar li{ list-style:none; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; }
+#toolbar li:hover{ background-color:#0E1014 }
+#toolbar img{ width:22px }
+#toolbar p{ font-weight:700; font-size:.68rem }
+
+/* -------------------------
+   Model page
+   ------------------------- */
+.model-card{ border-radius: 0.5rem; margin-bottom:0.75rem; padding:0.75rem; background-color: #1A1C1E; }
+.installation-status{ display: flex; flex-direction: row; }
+.installation-status[hidden] { display: none !important; }
+.installation-status img {width: 16px; margin-right: 8px; align-items: center;}
+
+/* -------------------------
+   Lesson list / items
+   ------------------------- */
+#lesson-list{ display:flex; flex-direction:row; gap:0.4375rem } /* 7px */
+.lesson-item{ border-radius: 0.5rem; margin-bottom:0.75rem; padding:0.75rem; cursor:pointer; background-color: #1A1C1E; }
+
+#lesson-modal{ margin-right:60px; width:1191px }
+#lesson-modal-header{ display:flex; flex-direction:row }
+
+/* search input inside lesson modal */
+#lesson-search-input{
+  background:none; border:none; flex:1; padding-left:0.6875rem; /*11px*/ font-size:0.938rem
+}
+#lesson-search-input:focus{ color:var(--text); outline:none }
+#lesson-search-input::placeholder{ color:var(--text) }
+
+/* -------------------------
+   Lesson body
+   ------------------------- */
+
+#lesson-body-container {
+  position: relative;
+  min-height: 400px;
 }
 
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
+/* -------------------------
+   Search form
+   ------------------------- */
+#search-form{
+  display:flex; align-items:center; border:1px solid var(--muted); border-radius:7px; width:342px
 }
-
-.modal.hidden {
-  display: none;
+#search-form img{
+  width:32px; padding:5px 1px; border:1px solid transparent; max-width:43px
 }
+#search-form img:hover{ cursor:pointer }
+#search-form:hover{ border-color:#E3E5E4 }
+#search-form:focus-within img{ border-color:#E3E5E4; border-top-right-radius:7px; border-bottom-right-radius:7px }
 
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
-  max-width: 560px;
-  width: 100%;
-  padding: 1.5rem;
+/* -------------------------
+   Buttons
+   ------------------------- */
+button{
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  background:var(--accent); color:var(--text); font-weight:700; font-size:.875rem;
+  min-height:36px; white-space:nowrap; border:none; padding:0 15px; border-radius:7px
 }
-
-.modal-close {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  float: right;
-  cursor: pointer;
+button:hover{ background:var(--accent-hover) }
+button:disabled,
+button[disabled]{
+  opacity:0.6;
+  cursor:not-allowed;
+  background: #4b5563;
 }
+button img{ width:16px }
+#import-lesson-btn { margin:0 56px 0 605px; width:146px; }
 
-.word-field {
-  margin-top: 1rem;
+/* -------------------------
+   Word tokens
+   ------------------------- */
+.word-token{
+  cursor:pointer; color:#fff; background-color:var(--token-default);
+  border:1px solid transparent; border-radius:var(--radius-sm);
+  font-size:1.188rem; margin:14px 0; display:inline-block; padding:0 2px
 }
+.word-token:hover{ border-color:#A1CBFF }
 
-.word-field label {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-weight: 600;
+.compound-word{ margin:0 0.15rem; padding: 0.05rem, 0;}
+
+
+/* familiarity variants: only override differences */
+.word-token.familiarity-1{ background-color:#6C572B }
+.word-token.familiarity-2{ background-color:#423C2C }
+.word-token.familiarity-3{ background-color:#3C3E3F }
+.word-token.familiarity-4{
+  background-color:transparent; border-bottom:1px dashed #fff; border-bottom-right-radius:0; border-bottom-left-radius:0
 }
+.word-token.familiarity-5{ background-color:transparent }
 
+/* shared hover behaviors */
+.word-token.familiarity-1:hover,
+.word-token.familiarity-2:hover,
+.word-token.familiarity-3:hover{ border-color:var(--warning) }
+.word-token.familiarity-5:hover{ border-color:#fff }
+
+/* -------------------------
+   UI chrome: toasts & modals
+   ------------------------- */
+.toast{ position:fixed; top:12px; right:12px; padding:8px 12px; color:white; z-index:1000; border-radius:4px }
+
+.modal{ background-color:#1B1D1E; border-radius:1.25rem; padding:16px }
+.modal.hidden{ display:none }
+.modal-close{ background:transparent; border:none; font-size:1.5rem; float:right; cursor:pointer }
+
+/* -------------------------
+   Forms / word modal
+   ------------------------- */
+.word-field{ margin-top:1rem }
+.word-field label{ display:block; margin-bottom:0.35rem; font-weight:600 }
 .word-field textarea,
-.word-field select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-}
+.word-field select{ width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:0.5rem }
 
-#word-modal-definition {
-  margin-top: 1rem;
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
+#word-modal-definition{ margin-top:1rem; font-size:0.95rem; line-height:1.5 }
+#word-modal{ position: absolute; inset: 0; width: 381px; height: max-content; margin: auto; z-index: 1;}
+#word-modal-header{display: flex; flex-direction: row;}
+#word-modal-header img{ margin-right: 8px; min-width: 23px;}
+#word-modal-header img:hover{ background:var(--accent-hover); border-radius: 0.5rem;}
+#word-modal-header button{ margin-left: auto}
