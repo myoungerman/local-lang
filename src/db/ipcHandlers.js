@@ -31,4 +31,7 @@ export default function setUpHandlers(db) {
     ipcMain.handle('get-compound-words', () => {
         return db.getCompoundWords();
     });
+    ipcMain.handle('save-word-audio', (event, word, audio) => {
+        return db.saveWordAudio(word, audio);
+    });
 }

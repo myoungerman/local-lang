@@ -269,10 +269,17 @@ const openWordModal = async (word) => {
     wordModal.classList.remove('hidden');
 
    if (progress?.audio) {
-    console.log('audio exists');
+    const buf = progress.audio;
+    const floats = new Float32Array(
+      buf.buffer,
+      buf.byteOffset,
+      buf.byteLength / Float32Array.BYTES_PER_ELEMENT
+    );
+    playBytesAsAudio(floats);
    } else {
     const audioBytes = await window.api.pronounceText(word);
     playBytesAsAudio(audioBytes);
+    await window.api.saveWordAudio(word, audioBytes);
    }
   } catch (error) {
     console.error(`Unable to translate ${word}. Error: ${error}`);

@@ -111,6 +111,18 @@ class AppDatabase{
     return stmt.get(word);
   }
 
+  saveWordAudio(word, audio){
+    const stmt = this.db.prepare(`
+      INSERT INTO word_progress (word, updated_at, audio)
+      VALUES (?, CURRENT_TIMESTAMP, ?)
+      ON CONFLICT(word) DO UPDATE SET
+        updated_at = CURRENT_TIMESTAMP,
+        audio = COALESCE(NULLIF(excluded.audio, ''), word_progress.audio)
+      `);
+    stmt.run(word, audio);
+    return audio;
+  }
+
   saveWordProgress(word, definition, familiarity, notes, is_compound){
     const stmt = this.db.prepare(`
       INSERT INTO word_progress (word, definition, familiarity, notes, updated_at, is_compound)
@@ -120,7 +132,8 @@ class AppDatabase{
         definition = excluded.definition,
         notes = excluded.notes,
         updated_at = CURRENT_TIMESTAMP,
-        is_compound = excluded.is_compound
+        is_compound = excluded.is_compound,
+        audio = word_progress.audio
     `);
     stmt.run(word, definition, familiarity, notes, is_compound);
     return { word, definition, familiarity, notes, is_compound };

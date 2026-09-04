@@ -55,7 +55,9 @@ const createWindow = () => {
 app.whenReady().then(() => {
   db = new AppDatabase();
   db.setUpDataBase();
+  // Set up handlers involving database calls.
   setUpHandlers(db);
+  // Set up handlers for non-database methods.
   ipcMain.handle('translate-text', translate);
   ipcMain.handle('download-translation-model', downloadTranslationModel);
   ipcMain.handle('download-tts-model', downloadTtsModel);
