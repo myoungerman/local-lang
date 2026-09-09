@@ -2,7 +2,7 @@ import './index.css';
 import "./assets/fonts/Inter-VariableFont_opsz,wght.ttf";
 
 const lessonBodyInput = document.getElementById('lesson-body-input');
-const addLessonButton = document.getElementById('add-lesson-btn');
+const importForm = document.getElementById('import-form');
 const lessonList = document.getElementById('lesson-list');
 const lessonTitleInput = document.getElementById('lesson-title-input');
 const lessonTitleDisplay = document.getElementById('lesson-title-display');
@@ -61,7 +61,10 @@ const handleAddLesson = async () => {
   }
 };
 
-addLessonButton.addEventListener('click', handleAddLesson);
+importForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  handleAddLesson();
+});
 
 backButton.addEventListener('click', () => {
   lessonPage.hidden = true;
@@ -141,6 +144,10 @@ const getFamiliarityClass = (familiarity) => {
   if (value === 4) return 'familiarity-4';
   if (value === 5) return 'familiarity-5';
   return '';
+};
+
+const normalizeDefinition = (definition) => {
+  return String(definition ?? '').replace(/^(?:Definition:\s*)+/i, '').trim();
 };
 
 const renderLessonBody = async (text) => {
@@ -246,7 +253,7 @@ const openWordModal = async (word) => {
     ]);
     wordModalTitle.textContent = word;
     // If the translation definition exists in either table, display that. Otherwise translate using the LLM.
-    const definition = translation?.trans_list ?? translation?.definition;
+    const definition = normalizeDefinition(translation?.trans_list ?? translation?.definition);
     if (definition) {
       wordModalDefinition.innerHTML = `
       <div><strong>Definition:</strong> ${definition}</div>
@@ -295,9 +302,7 @@ const saveWordProgress = async () => {
   const word = wordModal.dataset.currentWord.toLowerCase();
   if (!word) return;
 
-  const definition = wordModalDefinition.textContent
-    .replace(/^Definition:\s*/, '')
-    .trim();
+  const definition = normalizeDefinition(wordModalDefinition.textContent);
   const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
   const notes = wordModalNotes.value.trim();
   const isCompound = word.includes(' ') ? 1 : 0;
