@@ -25,7 +25,13 @@ export default function setUpHandlers(db) {
     ipcMain.handle('get-word-progress', (event, word) => {
         return db.getWordProgress(word);
     });
-    ipcMain.handle('save-word-progress', (event, word, familiarity, notes) => {
-        return db.saveWordProgress(word, familiarity, notes);
+    ipcMain.handle('save-word-progress', (event, word, definition, familiarity, notes, is_compound) => {
+        return db.saveWordProgress(word, definition, familiarity, notes, is_compound);
+    });
+    ipcMain.handle('get-compound-words', () => {
+        return db.getCompoundWords();
+    });
+    ipcMain.handle('save-word-audio', (event, word, audio) => {
+        return db.saveWordAudio(word, audio);
     });
 }
