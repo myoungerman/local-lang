@@ -22,6 +22,7 @@ const ttsRepoName = 'onnx-community/Supertonic-TTS-2-ONNX';
 const ttsModelPath = path.join(env.cacheDir, ttsModelFolderName);
 let translationModelInstalled = false;
 let ttsModelInstalled = false;
+let translationPipelinePromise;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -45,6 +46,8 @@ const createWindow = () => {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 
+    win.maximize();
+  win.show();
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
 };
@@ -205,11 +208,23 @@ const flattenDirectory = async (dir, modelType) => {
 }
 
 const detector = async (text, task, modelName) => {
-  const result = await pipeline(task, modelName, {
-    cache_dir: path.join(env.cacheDir),
-    local_files_only: true,
-  });
-  return result(text);
+  if (!translationPipelinePromise) {
+    translationPipelinePromise = pipeline(task, modelName, {
+      cache_dir: path.join(env.cacheDir),
+      local_files_only: true,
+      dtype: 'q8', //Explicitly use quantized models
+    });
+  }
+
+  let translation;
+  try {
+    translation = await translationPipelinePromise;
+  } catch (error) {
+    translationPipelinePromise = undefined;
+    throw error;
+  }
+
+  return translation(text);
 };
 
 const translate = async (_event, text) => {

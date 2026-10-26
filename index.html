@@ -1,101 +1,141 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <title>Local Lang</title>
-  </head>
-  <body>
-      <nav id="toolbar" aria-label="Primary">
+    <!-- Required: default theme + autoloader -->
+    <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/themes/default.css">
+    <script type="module" src="https://ka-f.webawesome.com/webawesome@3.14.0/webawesome.loader.js"></script>
+
+    <!-- Recommended: utility classes ("CSS Utilities") -->
+    <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/utilities.css">
+
+    <!-- Optional: CSS reset ("Native Styles") -->
+    <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.14.0/styles/native.css">
+
+</head>
+
+<body>
+    <nav id="toolbar" aria-label="Primary">
         <ul>
-          <li id="library-toolbar-btn">
-            <img src="./src/assets/images/lucide--library.svg" alt="Library">
-            <p>Library</p>
-          </li>
-          <li id="ai-models-toolbar-btn">
-            <img src="./src/assets/images/lucide--brain-cog.svg" alt="AI models">
-            <p>AI models</p>
-          </li>
+            <li id="library-toolbar-btn">
+                <img src="./src/assets/images/lucide--library.svg" alt="Library">
+                <p>Library</p>
+            </li>
+            <li id="ai-models-toolbar-btn">
+                <img src="./src/assets/images/lucide--brain-cog.svg" alt="AI models">
+                <p>AI models</p>
+            </li>
         </ul>
-      </nav>
-      <main>
+    </nav>
+    <main>
         <section id="lesson-modal" aria-labelledby="lesson-library-title">
-          <header id="lesson-modal-header">
-            <form id="search-form">
-                <label for="lesson-search-input" hidden>Search library</label>
-                <input type="search" id="lesson-search-input" placeholder="Search library" aria-label="Search library">
-                <img src="./src/assets/images/lucide--search.svg" alt="">
-            </form>
-            <button id="import-lesson-btn"><img src="./src/assets/images/lucide--download.svg" alt="Import lesson">Import lesson</button>
-          </header>
-          <h1 id="lesson-library-title">Lesson Library</h1>
-          <div id="lesson-list"></div>
+            <header id="lesson-modal-header">
+                <form id="search-form">
+                    <label for="lesson-search-input" hidden>Search library</label>
+                    <input type="search" id="lesson-search-input" placeholder="Search library"
+                        aria-label="Search library">
+                    <img src="./src/assets/images/lucide--search.svg" alt="">
+                </form>
+                <button id="import-lesson-btn"><img src="./src/assets/images/lucide--download.svg"
+                        alt="Import lesson">Import lesson</button>
+            </header>
+            <h1 id="lesson-library-title">Lesson Library</h1>
+            <div id="lesson-list"></div>
         </section>
         <div id="import-modal" hidden>
-          <form id="import-form">
-            <label for="lesson-title-input" hidden>Lesson title</label>
-            <input id="lesson-title-input" placeholder="Enter lesson title..." aria-label="Lesson title">
-            <br>
-            <label for="lesson-body-input" hidden>Lesson text</label>
-            <input id="lesson-body-input" placeholder="Paste the article text here..." aria-label="Lesson text">
-            <br>
-            <button id="add-lesson-btn" type="submit">Add lesson</button>
-          </form>
+            <form id="import-form">
+                <label for="lesson-title-input" hidden>Lesson title</label>
+                <input id="lesson-title-input" placeholder="Enter lesson title..." aria-label="Lesson title">
+                <br>
+                <label for="lesson-body-input" hidden>Lesson text</label>
+                <input id="lesson-body-input" placeholder="Paste the article text here..." aria-label="Lesson text">
+                <br>
+                <button id="add-lesson-btn" type="submit">Add lesson</button>
+            </form>
         </div>
         <div id="download-modal" hidden>
-          <p>LocalLang uses your computer's own hardware to run free AI models that can pronounce words and translate text. You'll need an internet connection to download the models, but once they're downloaded, those features will work without internet.</p>
-          <article id="tts-model-card" class="model-card">
-            <h2>Pronunciation Model</h2>
-            <p>Size: ~263 MB</p>
-            <p>Reads words and phrases out loud.</p>
-            <button id="download-pronunciation-model-btn">Download pronunciation model</button>
-            <div class="installation-status" role="status" aria-live="polite" hidden>
-              <img src="./src/assets/images/lucide--circle-check.svg" alt="">
-              <p>Model is installed.</p>
-            </div>
-          </article>
-          <article id="translation-model-card" class="model-card">
-            <h2>Translation Model</h2>
-            <p>Size: ~133 MB</p>
-            <p>Translates words and phrases when LocalLang can't find them in the dictionary.</p>
-            <button id="download-translation-model-btn">Download translation model</button>
-              <div class="installation-status" role="status" aria-live="polite" hidden>
-                <img src="./src/assets/images/lucide--circle-check.svg" alt="">
-                <p>Model is installed.</p>
-            </div>
-          </article>
+            <p>LocalLang uses your computer's own hardware to run free AI models that can pronounce words and translate
+                text. You'll need an internet connection to download the models, but once they're downloaded, those
+                features will work without internet.</p>
+            <article id="tts-model-card" class="model-card">
+                <h2>Pronunciation Model</h2>
+                <p>Size: ~263 MB</p>
+                <p>Reads words and phrases out loud.</p>
+                <button id="download-pronunciation-model-btn">Download pronunciation model</button>
+                <div class="installation-status" role="status" aria-live="polite" hidden>
+                    <img src="./src/assets/images/lucide--circle-check.svg" alt="">
+                    <p>Model is installed.</p>
+                </div>
+            </article>
+            <article id="translation-model-card" class="model-card">
+                <h2>Translation Model</h2>
+                <p>Size: ~133 MB</p>
+                <p>Translates words and phrases when LocalLang can't find them in the dictionary.</p>
+                <button id="download-translation-model-btn">Download translation model</button>
+                <div class="installation-status" role="status" aria-live="polite" hidden>
+                    <img src="./src/assets/images/lucide--circle-check.svg" alt="">
+                    <p>Model is installed.</p>
+                </div>
+            </article>
         </div>
         <article id="lesson-page" hidden>
-          <button id="back-btn">Back</button>
-          <h1 id="lesson-title-display">Lesson title</h1>
-          <p id="lesson-body-display">Lesson body</p>
+            <button id="back-btn">Back</button>
+            <h1 id="lesson-title-display">Lesson title</h1>
+            <p id="lesson-body-display">Lesson body</p>
         </article>
 
         <div id="word-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="word-modal-title">
-          <header id="word-modal-header">
-            <img id="word-modal-pronunciation" src="src/assets/images/lucide--volume-2.svg" alt="Pronounce word">
-            <h2 id="word-modal-title">Word</h2>
-            <button id="word-modal-close" class="modal-close" aria-label="Close word details">×</button>
-          </header>
-          <section id="word-modal-definition" class="word-field" aria-label="Definition"></section>
-          <div class="word-field">
-            <label for="word-modal-familiarity">Familiarity</label>
-            <form id="word-modal-familiarity">
-              <button type="button" class="familiarity-button" aria-label="Clear familiarity"><img src="src/assets/images/lucide--trash-2.svg" alt=""></button>
-              <button type="button" class="familiarity-button">1</button>
-              <button type="button" class="familiarity-button">2</button>
-              <button type="button" class="familiarity-button">3</button>
-              <button type="button" class="familiarity-button">4</button>
-              <button type="button" class="familiarity-button">5</button>
-              <button type="button" class="familiarity-button" aria-label="Confirm familiarity"><img src="src/assets/images/lucide--check.svg" alt=""></button>
-            </form>
-          </div>
-          <div class="word-field">
-            <label for="word-modal-notes">Notes</label>
-            <textarea id="word-modal-notes" rows="5" placeholder="Add notes for this word..."></textarea>
-          </div>
-          <button id="word-modal-save" type="button">Save</button>
+            <header id="word-modal-header">
+                <img id="word-modal-pronunciation" src="src/assets/images/lucide--volume-2.svg" alt="Pronounce word">
+                <h2 id="word-modal-title">Word</h2>
+                <button id="word-modal-close" class="modal-close" aria-label="Close word details">×</button>
+            </header>
+            <section id="word-modal-definition" class="word-field" aria-label="Definition"></section>
+            <div class="word-field">
+                <label for="word-modal-familiarity">Familiarity</label>
+                <form id="word-modal-familiarity">
+                    <button type="button" class="familiarity-button" aria-label="Clear familiarity"><img
+                            src="src/assets/images/lucide--trash-2.svg" alt=""></button>
+                    <button type="button" class="familiarity-button">1</button>
+                    <button type="button" class="familiarity-button">2</button>
+                    <button type="button" class="familiarity-button">3</button>
+                    <button type="button" class="familiarity-button">4</button>
+                    <button type="button" class="familiarity-button">5</button>
+                    <button type="button" class="familiarity-button" aria-label="Confirm familiarity"><img
+                            src="src/assets/images/lucide--check.svg" alt=""></button>
+                </form>
+            </div>
+            <div class="word-field">
+                <label for="word-modal-notes">Notes</label>
+                <textarea id="word-modal-notes" rows="5" placeholder="Add notes for this word..."></textarea>
+            </div>
+            <button id="word-modal-save" type="button">Save</button>
         </div>
-      </main>
-  </body>
-  <script type="module" src="./src/renderer.js"></script>
+        <h3>DWAGON PIPI WEBAWESOME</h3>
+        <wa-card class="card-overview">
+            <img slot="media"
+                src="https://images.unsplash.com/photo-1559209172-0ff8f6d49ff7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=80"
+                alt="A kitten sits patiently between a terracotta pot and decorative grasses." />
+
+            <strong>Mittens</strong><br />
+            This kitten is as cute as he is playful. Bring him home today!<br />
+            <small class="wa-caption-s">6 weeks old</small>
+
+            <wa-button slot="footer" variant="brand" pill>More Info</wa-button>
+            <wa-rating slot="footer-actions" label="Rating"></wa-rating>
+        </wa-card>
+
+        <style>
+            .card-overview {
+                width: 300px;
+            }
+        </style>
+
+
+    </main>
+</body>
+<script type="module" src="./src/renderer.js"></script>
+
 </html>
