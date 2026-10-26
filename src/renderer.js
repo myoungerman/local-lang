@@ -252,6 +252,11 @@ const openWordModal = async (word) => {
       window.api.getWordProgress(word),
     ]);
     wordModalTitle.textContent = word;
+    wordModalFamiliarity.value = progress?.familiarity ?? 1;
+    wordModalNotes.value = progress?.notes ?? '';
+    wordModal.dataset.currentWord = word;
+    wordModal.classList.remove('hidden');
+
     // If the translation definition exists in either table, display that. Otherwise translate using the LLM.
     const definition = normalizeDefinition(translation?.trans_list ?? translation?.definition);
     if (definition) {
@@ -259,21 +264,18 @@ const openWordModal = async (word) => {
       <div><strong>Definition:</strong> ${definition}</div>
       `;
     } else if (translationModelInstalled) {
+      wordModalDefinition.textContent = 'Translating...';
       try {
-        wordModalDefinition.innerHTML = `<div>Translating...</div>`;
-        const translation = await window.api.translateText(word);
-        wordModalDefinition.innerHTML = `<div>${translation}</div>`;
+        const translatedText = await window.api.translateText(word);
+        wordModalDefinition.textContent = translatedText;
       } catch (error) {
+        console.error(`Translation failed for "${word}":`, error);
+        wordModalDefinition.textContent = 'Translation failed.';
         showToast('Translation failed. Check console for details.', true);
       }
     } else {
       wordModalDefinition.innerHTML = `<div>No dictionary entry found for this word.</div>`;
     }
-
-    wordModalFamiliarity.value = progress?.familiarity ?? 1;
-    wordModalNotes.value = progress?.notes ?? '';
-    wordModal.dataset.currentWord = word;
-    wordModal.classList.remove('hidden');
 
    if (progress?.audio) {
     const buf = progress.audio;
