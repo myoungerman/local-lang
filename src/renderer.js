@@ -1,5 +1,8 @@
 import './index.css';
 import "./assets/fonts/Inter-VariableFont_opsz,wght.ttf";
+import '@awesome.me/webawesome/dist/styles/themes/default.css'; 
+import '@awesome.me/webawesome/dist/styles/utilities.css';
+import '@awesome.me/webawesome/dist/components/card/card.js'; 
 
 const lessonBodyInput = document.getElementById('lesson-body-input');
 const importForm = document.getElementById('import-form');
