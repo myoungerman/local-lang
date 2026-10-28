@@ -1,8 +1,9 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Local Lang</title>
 </head>
 
@@ -10,11 +11,11 @@
     <nav id="toolbar" aria-label="Primary">
         <ul>
             <li id="library-toolbar-btn">
-                <img src="./src/assets/images/lucide--library.svg" alt="Library">
+                <img src="src/assets/images/lucide--library.svg" alt="Library">
                 <p>Library</p>
             </li>
             <li id="ai-models-toolbar-btn">
-                <img src="./src/assets/images/lucide--brain-cog.svg" alt="AI models">
+                <img src="src/assets/images/lucide--brain-cog.svg" alt="AI models">
                 <p>AI models</p>
             </li>
         </ul>
@@ -26,9 +27,9 @@
                     <label for="lesson-search-input" hidden>Search library</label>
                     <input type="search" id="lesson-search-input" placeholder="Search library"
                         aria-label="Search library">
-                    <img src="./src/assets/images/lucide--search.svg" alt="">
+                    <img src="src/assets/images/lucide--search.svg" alt="">
                 </form>
-                <button id="import-lesson-btn"><img src="./src/assets/images/lucide--download.svg"
+                <button id="import-lesson-btn"><img src="src/assets/images/lucide--download.svg"
                         alt="Import lesson">Import lesson</button>
             </header>
             <h1 id="lesson-library-title">Lesson Library</h1>
@@ -55,7 +56,7 @@
                 <p>Reads words and phrases out loud.</p>
                 <button id="download-pronunciation-model-btn">Download pronunciation model</button>
                 <div class="installation-status" role="status" aria-live="polite" hidden>
-                    <img src="./src/assets/images/lucide--circle-check.svg" alt="">
+                    <img src="src/assets/images/lucide--circle-check.svg" alt="">
                     <p>Model is installed.</p>
                 </div>
             </article>
@@ -65,7 +66,7 @@
                 <p>Translates words and phrases when LocalLang can't find them in the dictionary.</p>
                 <button id="download-translation-model-btn">Download translation model</button>
                 <div class="installation-status" role="status" aria-live="polite" hidden>
-                    <img src="./src/assets/images/lucide--circle-check.svg" alt="">
+                    <img src="src/assets/images/lucide--circle-check.svg" alt="">
                     <p>Model is installed.</p>
                 </div>
             </article>
