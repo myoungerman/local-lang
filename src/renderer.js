@@ -283,6 +283,7 @@ const openWordModal = async (word) => {
       wordModalDefinition.innerHTML = `<div>No dictionary entry found for this word.</div>`;
     }
 
+  // If the audio already exists for this word, play that instead of regenerating it.
    if (progress?.audio) {
     const buf = progress.audio;
     const floats = new Float32Array(
@@ -334,7 +335,14 @@ pronunciationIcon.addEventListener('click', async () => {
   } else {
     // Call the TTS and pass the selected word or phrase
     try {
-      await window.api.pronounceText();
+      let currWord = wordModal.dataset.currentWord;
+      const buf = await window.api.pronounceText(currWord);
+      const floats = new Float32Array(
+      buf.buffer,
+      buf.byteOffset,
+      buf.byteLength / Float32Array.BYTES_PER_ELEMENT
+    );
+    playBytesAsAudio(floats);
     } catch (error) {
       console.log(error);
     }

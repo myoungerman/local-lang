@@ -60,13 +60,13 @@ app.whenReady().then(() => {
   db.setUpDataBase();
   // Set up handlers involving database calls.
   setUpHandlers(db);
-  // Set up handlers for non-database methods.
+  // Set up handlers for methods that reference methods or variables in this file, which they otherwise couldn't access.
   ipcMain.handle('translate-text', translate);
   ipcMain.handle('download-translation-model', downloadTranslationModel);
   ipcMain.handle('download-tts-model', downloadTtsModel);
   ipcMain.handle('check-for-translation-model', async () => { return translationModelInstalled });
   ipcMain.handle('check-for-tts-model', async () => { return ttsModelInstalled });
-  ipcMain.handle('pronounce-text', pronounceText );
+  ipcMain.handle('pronounce-text', pronounceText);
   createWindow();
   if (!fs.existsSync(env.cacheDir)) {
     fs.mkdirSync(env.cacheDir, { recursive: true });
@@ -250,6 +250,14 @@ const withContext = async (step, fn) => {
 const pronounceText = async (_event, text) => {
   if (typeof text !== 'string' || !text.trim()) {
     throw new Error('pronounceText expected a non-empty string');
+  }
+
+  // If the word already exists in the DB, return that audio
+  const progress = db.getWordProgress(text);
+
+  if (progress?.audio) {
+    console.log('Word already has audio, returning that...');
+    return progress.audio;
   }
 
   const tts = await withContext('Loading TTS pipeline', () =>
