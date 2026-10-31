@@ -311,6 +311,7 @@ const saveWordProgress = async () => {
   const word = wordModal.dataset.currentWord.toLowerCase();
   if (!word) return;
 
+  console.log(familiarity);
   const definition = normalizeDefinition(wordModalDefinition.textContent);
   const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
   const notes = wordModalNotes.value.trim();
@@ -328,6 +329,7 @@ wordModalCloseButton.addEventListener('click', () => {
   closeWordModal();
 });
 
+// Speaker icon in the word definition modal.
 pronunciationIcon.addEventListener('click', async () => {
   if (ttsIsAlreadyProcessing) {
     showToast(`This word's audio is already being processed.`);
