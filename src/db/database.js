@@ -139,6 +139,11 @@ class AppDatabase{
     return { word, definition, familiarity, notes, is_compound };
   }
 
+  deleteWord(word){
+    const stmt = this.db.prepare('DELETE FROM word_progress WHERE word = ?');
+    stmt.run(word);
+  }
+
   close(){
     this.db.close();
     this.translationDb.close();

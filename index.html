@@ -86,16 +86,35 @@
             <section id="word-modal-definition" class="word-field" aria-label="Definition"></section>
             <div class="word-field">
                 <label for="word-modal-familiarity">Familiarity</label>
-                <form id="word-modal-familiarity">
-                    <button type="button" class="familiarity-button" aria-label="Clear familiarity"><img
-                            src="src/assets/images/lucide--trash-2.svg" alt=""></button>
-                    <button type="button" class="familiarity-button">1</button>
-                    <button type="button" class="familiarity-button">2</button>
-                    <button type="button" class="familiarity-button">3</button>
-                    <button type="button" class="familiarity-button">4</button>
-                    <button type="button" class="familiarity-button">5</button>
-                    <button type="button" class="familiarity-button" aria-label="Confirm familiarity"><img
-                            src="src/assets/images/lucide--check.svg" alt=""></button>
+                <form id="word-modal-familiarity" data-familiarity="1">
+                    <label class="familiarity-option">
+                        <input type="radio" class="familiarity-button" name="familiarity" value="delete" aria-label="Clear familiarity" data-dialog="open dialog-delete">
+                        <img src="src/assets/images/lucide--trash-2.svg" alt="">
+                    </label>
+                    <label class="familiarity-option">
+                        <input type="radio" class="familiarity-button" name="familiarity" value="1">
+                        <span>1</span>
+                    </label>
+                    <label class="familiarity-option">
+                        <input type="radio" class="familiarity-button" name="familiarity" value="2">
+                        <span>2</span>
+                    </label>
+                    <label class="familiarity-option">
+                        <input type="radio" class="familiarity-button" name="familiarity" value="3">
+                        <span>3</span>
+                    </label>
+                    <label class="familiarity-option">
+                        <input type="radio" class="familiarity-button" name="familiarity" value="4">
+                        <span>4</span>
+                    </label>
+                    <label class="familiarity-option">
+                        <input type="radio" class="familiarity-button" name="familiarity" value="5">
+                        <span>5</span>
+                    </label>
+                    <label class="familiarity-option">
+                        <input type="radio" class="familiarity-button" name="familiarity" value="6" aria-label="Confirm familiarity">
+                        <img src="src/assets/images/lucide--check.svg" alt="">
+                    </label>
                 </form>
             </div>
             <div class="word-field">
@@ -104,27 +123,11 @@
             </div>
             <button id="word-modal-save" type="button">Save</button>
         </div>
-        <h3>DWAGON PIPI WEBAWESOME</h3>
-        <wa-card class="card-overview">
-            <img slot="media"
-                src="https://images.unsplash.com/photo-1559209172-0ff8f6d49ff7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=80"
-                alt="A kitten sits patiently between a terracotta pot and decorative grasses." />
-
-            <strong>Mittens</strong><br />
-            This kitten is as cute as he is playful. Bring him home today!<br />
-            <small class="wa-caption-s">6 weeks old</small>
-
-            <wa-button slot="footer" variant="brand" pill>More Info</wa-button>
-            <wa-rating slot="footer-actions" label="Rating"></wa-rating>
-        </wa-card>
-
-        <style>
-            .card-overview {
-                width: 300px;
-            }
-        </style>
-
-
+        <wa-dialog label="Delete word dialog" id="dialog-delete" light-dismiss class="dialog-light-dismiss">
+            Are you sure you want to delete this word or phrase from your tracked words, completely resetting the word or phrase's progress? 
+            <wa-button id="word-dialog-delete-btn" slot="footer" variant="danger" data-dialog="close">Delete word</wa-button>
+            <wa-button id="word-dialog-close-btn" slot="footer" variant="brand" data-dialog="close">Close</wa-button>
+        </wa-dialog>
     </main>
 </body>
 <script type="module" src="./src/renderer.js"></script>

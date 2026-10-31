@@ -34,4 +34,7 @@ export default function setUpHandlers(db) {
     ipcMain.handle('save-word-audio', (event, word, audio) => {
         return db.saveWordAudio(word, audio);
     });
+    ipcMain.handle('delete-word', (event, word) => {
+        return db.deleteWord(word);
+    });    
 }
