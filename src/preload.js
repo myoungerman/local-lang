@@ -20,6 +20,7 @@ const api = {
   checkTtsModelExists: () => ipcRenderer.invoke('check-for-tts-model'),
   pronounceText: (word) => ipcRenderer.invoke('pronounce-text', word),
   saveWordAudio: (word, audio) => ipcRenderer.invoke('save-word-audio', word, audio),
+  deleteWord: (word) => ipcRenderer.invoke('delete-word', word),
 }   
 
 contextBridge.exposeInMainWorld('api', api);

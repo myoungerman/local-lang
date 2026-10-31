@@ -1,11 +1,7 @@
 import './index.css';
 import "./assets/fonts/Inter-VariableFont_opsz,wght.ttf";
 import '@awesome.me/webawesome/dist/styles/webawesome.css';
-import '@awesome.me/webawesome/dist/styles/utilities.css';
-import '@awesome.me/webawesome/dist/webawesome.loader.js';
-
-import '@awesome.me/webawesome/dist/components/rating/rating.js'
-import '@awesome.me/webawesome/dist/components/card/card.js'; 
+import '@awesome.me/webawesome/dist/components/dialog/dialog.js';
 
 const lessonBodyInput = document.getElementById('lesson-body-input');
 const importForm = document.getElementById('import-form');
@@ -23,6 +19,7 @@ const wordModalCloseButton = document.getElementById('word-modal-close');
 const wordModalTitle = document.getElementById('word-modal-title');
 const wordModalDefinition = document.getElementById('word-modal-definition');
 const wordModalFamiliarity = document.getElementById('word-modal-familiarity');
+const wordModalRadio = wordModalFamiliarity.querySelectorAll("input[type='radio']");
 const wordModalNotes = document.getElementById('word-modal-notes');
 const downloadTranslationModelButton = document.getElementById('download-translation-model-btn');
 const downloadTtsModelButton = document.getElementById('download-pronunciation-model-btn');
@@ -31,6 +28,9 @@ const aiModelsToolbarButton = document.getElementById('ai-models-toolbar-btn');
 const ttsModelCard = document.getElementById('tts-model-card');
 const translationModelCard = document.getElementById('translation-model-card');
 const pronunciationIcon = document.getElementById('word-modal-pronunciation');
+const saveWordModalButton = document.getElementById('word-modal-save');
+const wordDialogDeleteButton = document.getElementById('word-dialog-delete-btn');
+const wordDialogCloseButton = document.getElementById('word-dialog-close-btn');
 
 let currentLessonId = null;
 let translationModelInstalled = false;
@@ -258,7 +258,7 @@ const openWordModal = async (word) => {
       window.api.getWordProgress(word),
     ]);
     wordModalTitle.textContent = word;
-    wordModalFamiliarity.value = progress?.familiarity ?? 1;
+    wordModalFamiliarity.dataset.familiarity = progress?.familiarity ?? 1;
     wordModalNotes.value = progress?.notes ?? '';
     wordModal.dataset.currentWord = word;
     wordModal.classList.remove('hidden');
@@ -311,9 +311,8 @@ const saveWordProgress = async () => {
   const word = wordModal.dataset.currentWord.toLowerCase();
   if (!word) return;
 
-  console.log(familiarity);
   const definition = normalizeDefinition(wordModalDefinition.textContent);
-  const familiarity = parseInt(wordModalFamiliarity.value, 10) || 1;
+  const familiarity = parseInt(wordModalFamiliarity.dataset.familiarity, 10) || 1;
   const notes = wordModalNotes.value.trim();
   const isCompound = word.includes(' ') ? 1 : 0;
   await window.api.saveWordProgress(word, definition, familiarity, notes, isCompound);
@@ -361,6 +360,20 @@ lessonBodyDisplay.addEventListener('click', (event) => {
       openWordModal(word);
     }
   }
+});
+
+// Listen for user to select a familiarity level in the word definition modal
+wordModalFamiliarity.addEventListener('change', (event) => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || input.name !== 'familiarity') return;
+  console.log('Selected familiarity:', input.value);
+  // If the input is anything besides delete, update familiarity to the new level. Otherwise confirm that the user wants to delete the word.
+  if (input.value !== "delete") {
+      wordModalFamiliarity.dataset.familiarity = input.value;
+  } else {
+
+  }
+  //
 });
 
 const updateLessonContent = async (lessonId, updates) => {
@@ -466,6 +479,35 @@ lessonPage.addEventListener('click', (e) => {
     saveWordProgress();
   }
 }, {capture: true}); // This listener uses the capture flag since I need it to fire before the other click event listener.
+
+saveWordModalButton.addEventListener('click', async () => {
+  saveWordProgress();
+  closeWordModal();
+  if (currentLessonId) {
+    await getLessonContent(currentLessonId);
+  }
+});
+
+wordDialogCloseButton.addEventListener('click', async () => {
+  saveWordProgress();
+  closeWordModal();
+  if (currentLessonId) {
+    await getLessonContent(currentLessonId);
+  }
+});
+
+wordDialogDeleteButton.addEventListener('click', async () => {
+  try {
+    console.log('deleting');
+    await window.api.deleteWord(wordModal.dataset.currentWord)
+  } catch (error) {
+    console.log(error);
+  }
+  closeWordModal();
+  if (currentLessonId) {
+    await getLessonContent(currentLessonId);
+  }
+});
 
 const playBytesAsAudio = (bytesArr) => {
   const buffer = audioCtx.createBuffer(1, bytesArr.length, 44100) // I got the sample rate from the tts model's config.json
