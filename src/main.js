@@ -17,8 +17,8 @@ env.cacheDir = env.cacheDir.replace(/\\/g, '/');
 env.localModelPath = path.join(env.cacheDir);
 env.localModelPath = env.localModelPath.replace(/\\/g, '/');
 const translationModelPath = path.join(env.cacheDir, 'models--Xenova--opus-mt-fr-en');
-const ttsModelFolderName = 'models--onnx-community--Supertonic-TTS-2-ONNX';
-const ttsRepoName = 'onnx-community/Supertonic-TTS-2-ONNX';
+const ttsModelFolderName = 'models--open-world-group--Supertonic-3-ONNX';
+const ttsRepoName = 'open-world-group/Supertonic-3-ONNX'; 
 const ttsModelPath = path.join(env.cacheDir, ttsModelFolderName);
 let translationModelInstalled = false;
 let ttsModelInstalled = false;
@@ -140,10 +140,27 @@ const downloadTtsModel = async () => {
     if (fs.existsSync(ttsModelPath)) {
       return;
     }
-    await snapshotDownload({
+
+    let files = [];
+    // Make a list of all the files that should be downloaded. The repo has some large files that we'll ignore.
+    for await (const file of listFiles({
       repo: ttsRepoName,
-      cacheDir: env.cacheDir,
-    });
+      revision: 'main',
+      recursive: true,
+    })) {
+        const fileHasExtension = path.extname(file.path) !== '';
+        // Add just the encoder_model_quantized.onnx and decoder_model_merged_quantized.onnx files from the ONNX folder, and add the ONNX folder itself.
+      if (file.path.includes('onnx') && (file.path.includes('text_encoder.onnx') || file.path.includes('latent_denoiser_quantized.onnx')  || file.path.includes('voice_decoder.onnx'))) {
+          const normalizedPath = file.path.replace(/\\/g, '/');
+          files.push({ ...file, path: normalizedPath });
+        }
+        // Add the files that are not in the ONNX folder.
+        if (!file.path.includes('onnx') && fileHasExtension) {
+          files.push(file);
+        }
+      }
+
+    await downloadFiles(files, ttsRepoName);
     await flattenDirectory(ttsModelPath, 'tts');
     ttsModelInstalled = true;
     console.log('installed tts model');
@@ -264,6 +281,7 @@ const pronounceText = async (_event, text) => {
     pipeline('text-to-speech', ttsModelFolderName, {
       cache_dir: path.join(env.cacheDir),
       local_files_only: true,
+      dtype: { text_encoder: 'fp32', latent_denoiser: 'q8', voice_decoder: 'fp32' },
     })
   );
 
