@@ -2,6 +2,7 @@ import './index.css';
 import "./assets/fonts/Inter-VariableFont_opsz,wght.ttf";
 import '@awesome.me/webawesome/dist/styles/webawesome.css';
 import '@awesome.me/webawesome/dist/components/dialog/dialog.js';
+import '@awesome.me/webawesome/dist/components/progress-bar/progress-bar.js';
 
 const lessonBodyInput = document.getElementById('lesson-body-input');
 const importForm = document.getElementById('import-form');
@@ -103,11 +104,15 @@ const updateInstallUi = async () => {
   }
 
   if (ttsModelInstalled) {
+    const bar = ttsModelCard.querySelector('wa-progress-bar');
+    bar.hidden = true;
     ttsModelCard.querySelector('.installation-status').hidden = false;
     const ttsButton = ttsModelCard.querySelector('button');
     if (ttsButton) ttsButton.disabled = true;
   }
   if (translationModelInstalled) {
+    const bar = translationModelCard.querySelector('wa-progress-bar');
+    bar.hidden = true;
     translationModelCard.querySelector('.installation-status').hidden = false;
     const translationButton = translationModelCard.querySelector('button');
     if (translationButton) translationButton.disabled = true;
@@ -432,19 +437,26 @@ lessonBodyDisplay.addEventListener('mouseup', (e) => {
 
 downloadTtsModelButton.addEventListener('click', async () => {
   try {
+    const bar = ttsModelCard.querySelector('wa-progress-bar');
+    bar.hidden = false;
     await window.api.downloadTtsModel();
     showToast('Tts model downloaded successfully.');
     updateInstallUi();
+    bar.hidden = true;
   } catch (error) {
+    bar.hidden = true;
     showToast('Tts model download failed. Check console for details.', true);}
 });
 
 downloadTranslationModelButton.addEventListener('click', async () => {
   try {
+    const bar = translationModelCard.querySelector('wa-progress-bar');
+    bar.hidden = false;
     await window.api.downloadTranslationModel();
     showToast('Translation model downloaded successfully.');
     updateInstallUi();
   } catch (error) {
+    bar.hidden = true;
     showToast('Translation model download failed. Check console for details.', true);}
 });
 
