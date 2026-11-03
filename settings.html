@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" class="wa-theme-default wa-palette-mild wa-brand-blue wa-dark">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/node_modules/@awesome.me/webawesome/dist/styles/webawesome.css">
+    <link rel="stylesheet" href="/node_modules/@awesome.me/webawesome/dist/styles/themes/awesome.css">
+    <title>Settings</title>
+    <script type="module" src="src/settings.js"></script>
+</head>
+
+<body>
+    <wa-page class="wa-brand-blue">
+        <header slot="header">
+            <h2>My Application</h2>
+        </header>
+
+        <nav slot="navigation">
+    <wa-button appearance="plain" href="/">
+        <wa-icon slot="start" name="house"></wa-icon>
+        Home
+    </wa-button>
+
+    <wa-divider></wa-divider>
+
+    <wa-button appearance="plain" href="/library">
+        <wa-icon slot="start" name="library"></wa-icon>
+        Library
+    </wa-button>
+
+    <wa-button appearance="plain" href="/history">
+        <wa-icon slot="start" name="clock-rotate-left"></wa-icon>
+        History
+    </wa-button>
+
+    <wa-button appearance="plain" href="/favorites">
+        <wa-icon slot="start" name="star"></wa-icon>
+        Favorites
+    </wa-button>
+
+    <wa-divider></wa-divider>
+
+    <wa-button appearance="plain" href="/models">
+        <wa-icon slot="start" name="brain"></wa-icon>
+        Models
+    </wa-button>
+
+    <wa-button appearance="plain" href="/prompts">
+        <wa-icon slot="start" name="message-square"></wa-icon>
+        Prompts
+    </wa-button>
+
+    <wa-divider></wa-divider>
+
+    <wa-button appearance="plain" href="/settings">
+        <wa-icon slot="start" name="settings"></wa-icon>
+        Settings
+    </wa-button>
+
+    <wa-button appearance="plain" href="/help">
+        <wa-icon slot="start" name="circle-help"></wa-icon>
+        Help & Support
+    </wa-button>
+</nav>
+
+        <main>
+            <h1>Welcome</h1>
+            <p>This is the main page content.</p>
+            <wa-button>Click me</wa-button>
+        </main>
+    </wa-page>
+</body>
+
+</html>
