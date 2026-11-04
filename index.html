@@ -21,110 +21,11 @@
         </ul>
     </nav>
     <main>
-        <section id="lesson-modal" aria-labelledby="lesson-library-title">
-            <header id="lesson-modal-header">
-                <form id="search-form">
-                    <label for="lesson-search-input" hidden>Search library</label>
-                    <input type="search" id="lesson-search-input" placeholder="Search library"
-                        aria-label="Search library">
-                    <img src="src/assets/images/lucide--search.svg" alt="">
-                </form>
-                <button id="import-lesson-btn"><img src="src/assets/images/lucide--download.svg"
-                        alt="Import lesson">Import lesson</button>
-            </header>
-            <h1 id="lesson-library-title">Lesson Library</h1>
-            <div id="lesson-list"></div>
-        </section>
-        <div id="import-modal" hidden>
-            <form id="import-form">
-                <label for="lesson-title-input" hidden>Lesson title</label>
-                <input id="lesson-title-input" placeholder="Enter lesson title..." aria-label="Lesson title">
-                <br>
-                <label for="lesson-body-input" hidden>Lesson text</label>
-                <input id="lesson-body-input" placeholder="Paste the article text here..." aria-label="Lesson text">
-                <br>
-                <button id="add-lesson-btn" type="submit">Add lesson</button>
-            </form>
-        </div>
-        <div id="download-modal" hidden>
-            <p>LocalLang uses your computer's own hardware to run free AI models that can pronounce words and translate
-                text. You'll need an internet connection to download the models, but once they're downloaded, those
-                features will work without internet.</p>
-            <article id="tts-model-card" class="model-card">
-                <h2>Pronunciation Model</h2>
-                <p>Size: ~263 MB</p>
-                <p>Reads words and phrases out loud.</p>
-                <button id="download-pronunciation-model-btn">Download pronunciation model</button>
-                <div class="installation-status" role="status" aria-live="polite" hidden>
-                    <img src="src/assets/images/lucide--circle-check.svg" alt="">
-                    <p>Model is installed.</p>
-                </div>
-                <wa-progress-bar indeterminate hidden></wa-progress-bar>
-            </article>
-            <article id="translation-model-card" class="model-card">
-                <h2>Translation Model</h2>
-                <p>Size: ~133 MB</p>
-                <p>Translates words and phrases when LocalLang can't find them in the dictionary.</p>
-                <button id="download-translation-model-btn">Download translation model</button>
-                <div class="installation-status" role="status" aria-live="polite" hidden>
-                    <img src="src/assets/images/lucide--circle-check.svg" alt="">
-                    <p>Model is installed.</p>
-                </div>
-                <wa-progress-bar indeterminate hidden></wa-progress-bar>
-            </article>
-        </div>
-        <article id="lesson-page" hidden>
-            <button id="back-btn">Back</button>
-            <h1 id="lesson-title-display">Lesson title</h1>
-            <p id="lesson-body-display">Lesson body</p>
-        </article>
-
-        <div id="word-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="word-modal-title">
-            <header id="word-modal-header">
-                <img id="word-modal-pronunciation" src="src/assets/images/lucide--volume-2.svg" alt="Pronounce word">
-                <h2 id="word-modal-title">Word</h2>
-                <button id="word-modal-close" class="modal-close" aria-label="Close word details">×</button>
-            </header>
-            <section id="word-modal-definition" class="word-field" aria-label="Definition"></section>
-            <div class="word-field">
-                <label for="word-modal-familiarity">Familiarity</label>
-                <form id="word-modal-familiarity" data-familiarity="1">
-                    <label class="familiarity-option">
-                        <input type="radio" class="familiarity-button" name="familiarity" value="delete" aria-label="Clear familiarity" data-dialog="open dialog-delete">
-                        <img src="src/assets/images/lucide--trash-2.svg" alt="">
-                    </label>
-                    <label class="familiarity-option">
-                        <input type="radio" class="familiarity-button" name="familiarity" value="1">
-                        <span>1</span>
-                    </label>
-                    <label class="familiarity-option">
-                        <input type="radio" class="familiarity-button" name="familiarity" value="2">
-                        <span>2</span>
-                    </label>
-                    <label class="familiarity-option">
-                        <input type="radio" class="familiarity-button" name="familiarity" value="3">
-                        <span>3</span>
-                    </label>
-                    <label class="familiarity-option">
-                        <input type="radio" class="familiarity-button" name="familiarity" value="4">
-                        <span>4</span>
-                    </label>
-                    <label class="familiarity-option">
-                        <input type="radio" class="familiarity-button" name="familiarity" value="5">
-                        <span>5</span>
-                    </label>
-                    <label class="familiarity-option">
-                        <input type="radio" class="familiarity-button" name="familiarity" value="6" aria-label="Confirm familiarity">
-                        <img src="src/assets/images/lucide--check.svg" alt="">
-                    </label>
-                </form>
-            </div>
-            <div class="word-field">
-                <label for="word-modal-notes">Notes</label>
-                <textarea id="word-modal-notes" rows="5" placeholder="Add notes for this word..."></textarea>
-            </div>
-            <button id="word-modal-save" type="button">Save</button>
-        </div>
+        <include file="src/components/library.html"></include>
+        <include file="src/components/import-lesson.html"></include>
+        <include file="src/components/download.html"></include>
+        <include file="src/components/lesson.html"></include>
+        <include file="src/components/word.html"></include>
         <wa-dialog label="Delete word dialog" id="dialog-delete" light-dismiss class="dialog-light-dismiss">
             Are you sure you want to delete this word or phrase from your tracked words, completely resetting the word or phrase's progress? 
             <wa-button id="word-dialog-delete-btn" slot="footer" variant="danger" data-dialog="close">Delete word</wa-button>
@@ -133,5 +34,4 @@
     </main>
 </body>
 <script type="module" src="./src/renderer.js"></script>
-
 </html>
