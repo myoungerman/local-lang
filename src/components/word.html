@@ -1,0 +1,48 @@
+<div id="word-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="word-modal-title">
+    <header id="word-modal-header">
+        <img id="word-modal-pronunciation" src="src/assets/images/lucide--volume-2.svg" alt="Pronounce word">
+        <h2 id="word-modal-title">Word</h2>
+        <button id="word-modal-close" class="modal-close" aria-label="Close word details">×</button>
+    </header>
+    <section id="word-modal-definition" class="word-field" aria-label="Definition"></section>
+    <div class="word-field">
+        <label for="word-modal-familiarity">Familiarity</label>
+        <form id="word-modal-familiarity" data-familiarity="1">
+            <label class="familiarity-option">
+                <input type="radio" class="familiarity-button" name="familiarity" value="delete"
+                    aria-label="Clear familiarity" data-dialog="open dialog-delete">
+                <img src="src/assets/images/lucide--trash-2.svg" alt="">
+            </label>
+            <label class="familiarity-option">
+                <input type="radio" class="familiarity-button" name="familiarity" value="1">
+                <span>1</span>
+            </label>
+            <label class="familiarity-option">
+                <input type="radio" class="familiarity-button" name="familiarity" value="2">
+                <span>2</span>
+            </label>
+            <label class="familiarity-option">
+                <input type="radio" class="familiarity-button" name="familiarity" value="3">
+                <span>3</span>
+            </label>
+            <label class="familiarity-option">
+                <input type="radio" class="familiarity-button" name="familiarity" value="4">
+                <span>4</span>
+            </label>
+            <label class="familiarity-option">
+                <input type="radio" class="familiarity-button" name="familiarity" value="5">
+                <span>5</span>
+            </label>
+            <label class="familiarity-option">
+                <input type="radio" class="familiarity-button" name="familiarity" value="6"
+                    aria-label="Confirm familiarity">
+                <img src="src/assets/images/lucide--check.svg" alt="">
+            </label>
+        </form>
+    </div>
+    <div class="word-field">
+        <label for="word-modal-notes">Notes</label>
+        <textarea id="word-modal-notes" rows="5" placeholder="Add notes for this word..."></textarea>
+    </div>
+    <button id="word-modal-save" type="button">Save</button>
+</div>

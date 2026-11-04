@@ -11,7 +11,6 @@ const lessonTitleInput = document.getElementById('lesson-title-input');
 const lessonTitleDisplay = document.getElementById('lesson-title-display');
 const lessonBodyDisplay = document.getElementById('lesson-body-display');
 const lessonModal = document.getElementById('lesson-modal');
-const importModal = document.getElementById('import-modal');
 const downloadModal = document.getElementById('download-modal');
 const lessonPage = document.getElementById('lesson-page');
 const backButton = document.getElementById('back-btn');
@@ -82,7 +81,6 @@ backButton.addEventListener('click', () => {
 libraryToolbarButton.addEventListener('click', () => {
   lessonPage.hidden = true;
   downloadModal.hidden = true;
-  importModal.hidden = true;
   lessonModal.hidden = false;
   renderLessons();
 });
@@ -90,7 +88,6 @@ libraryToolbarButton.addEventListener('click', () => {
 aiModelsToolbarButton.addEventListener('click', async () => {
   lessonPage.hidden = true;
   lessonModal.hidden = true;
-  importModal.hidden = true;
   updateInstallUi();
   downloadModal.hidden = false;
 });
@@ -399,7 +396,6 @@ lessonList.addEventListener('click', async (event) => {
   if (lessonId) {
     currentLessonId = lessonId;
     lessonModal.hidden = true;
-    importModal.hidden = true;
     lessonPage.hidden = false;
     const clickedAt = new Date().toISOString();
     updateLessonContent(lessonId, { last_opened: clickedAt });
