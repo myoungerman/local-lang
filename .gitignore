@@ -93,3 +93,8 @@ typings/
 
 # Electron-Forge
 out/
+
+# Local SQLite database files
+src/db/langlocal.sqlite
+src/db/langlocal.sqlite-shm
+src/db/langlocal.sqlite-wal
